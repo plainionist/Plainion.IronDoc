@@ -28,6 +28,9 @@
     <Reference Include="System.Numerics" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\..\build\GlobalAssemblyInfo.fs">
+      <Link>Properties\GlobalAssemblyInfo.fs</Link>
+    </Compile>
     <Compile Include="Utils.fs" />
     <Compile Include="AssemblyInfo.fs" />
   </ItemGroup>

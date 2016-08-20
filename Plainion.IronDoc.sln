@@ -7,6 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "@Solution Items", "@Solutio
 	ProjectSection(SolutionItems) = preProject
 		build\create-package.cmd = build\create-package.cmd
 		build\GlobalAssemblyInfo.cs = build\GlobalAssemblyInfo.cs
+		build\GlobalAssemblyInfo.fs = build\GlobalAssemblyInfo.fs
 		build\Globals.Shared.msbuild = build\Globals.Shared.msbuild
 		build\packager.msbuild = build\packager.msbuild
 		build\Plainion.IronDoc.nuspec = build\Plainion.IronDoc.nuspec
