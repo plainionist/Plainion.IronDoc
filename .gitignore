@@ -2,3 +2,4 @@
 **/obj/**
 /*.suo
 /pkg/**
+/packages/NUnit.3.2.1
