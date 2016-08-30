@@ -75,8 +75,10 @@ namespace Plainion.IronDoc
         {
             myAssemblyBaseDirs.Add(Path.GetDirectoryName(assemblyFile));
 
+            // Load assembly from byte[] to avoid getting the file locked by our process
+
             byte[] assemblyBytes = File.ReadAllBytes(assemblyFile);
-            return Assembly.ReflectionOnlyLoad(assemblyBytes);
+            return Assembly.Load( assemblyBytes );
         }
     }
 }

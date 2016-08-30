@@ -18,6 +18,10 @@
   <ItemGroup>
     <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="Microsoft.Build.Utilities.v4.0" />
+    <Reference Include="NuDoq, Version=1.2.0.0, Culture=neutral, PublicKeyToken=197ef17e56afcdb9, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\NuDoq.1.2.5\lib\net35\NuDoq.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -29,6 +33,7 @@
   <ItemGroup>
     <Compile Include="AssemblyLoader.cs" />
     <Compile Include="IronDoc.cs" />
+    <Compile Include="MarkdownVisitor.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="XmlDocTransformer.cs" />
@@ -39,6 +44,7 @@
     <Content Include="Plainion.IronDoc.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="packages.config" />
     <None Include="ReadMe.md" />
   </ItemGroup>
   <ItemGroup>
