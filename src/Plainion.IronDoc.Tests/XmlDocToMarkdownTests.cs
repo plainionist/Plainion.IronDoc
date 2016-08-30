@@ -36,6 +36,14 @@ This is a summary
 "));
         }
 
+        [Test]
+        public void OverwrittenMethods()
+        {
+            var markdownDocument = Transform(typeof(OverwrittenMethods));
+
+            Assert.That(markdownDocument, Does.Contain(@"Returns nicely formatted message about the state of this object"));
+        }
+
         private string Transform(Type type)
         {
             using (var writer = new StringWriter())
