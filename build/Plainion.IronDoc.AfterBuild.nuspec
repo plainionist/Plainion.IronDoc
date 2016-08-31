@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package >
     <metadata>
-        <id>Plainion.IronDoc</id>
-        <title>Plainion.IronDoc</title>
+        <id>Plainion.IronDoc.AfterBuild</id>
+        <title>Plainion.IronDoc.AfterBuild</title>
         <version>1.3.0.0</version>
         <authors>ronin4net</authors>
         <owners>ronin4net</owners>
@@ -12,5 +12,8 @@
         <description>All public APIs get documented (even if Xml doc is missing)</description>
         <releaseNotes>Separated IronDoc core functionality from MsBuild AfterBuild hook into 2 packages</releaseNotes>
         <copyright>Copyright 2016</copyright>
+        <dependencies>
+            <dependency id="Plainion.IronDoc" version="1.3.0.0" />
+        </dependencies>
     </metadata>
 </package>
