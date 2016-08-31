@@ -28,10 +28,7 @@ namespace Plainion.IronDoc
 
             using( var writer = new StreamWriter( outputFile ) )
             {
-                //Transform( assembly, XmlDocDocument.Load( xmlDoc ), writer );
-
-                var members = NuDoq.DocReader.Read( assembly, xmlDoc );
-                members.Accept( new MarkdownVisitor( writer ) );
+                Transform( assembly, XmlDocDocument.Load( xmlDoc ), writer );
             }
         }
 
