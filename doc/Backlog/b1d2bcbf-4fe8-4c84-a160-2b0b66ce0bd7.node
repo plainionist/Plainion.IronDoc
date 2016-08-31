@@ -1,5 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Node Id="b1d2bcbf-4fe8-4c84-a160-2b0b66ce0bd7" Created="636081579179137515" LastModified="636081579496426005">
-  <Caption><![CDATA[Provide MarkDown writer for API doc to Plainion.Core]]></Caption>
-  <Content><![CDATA[- add tests]]></Content>
-</Node>

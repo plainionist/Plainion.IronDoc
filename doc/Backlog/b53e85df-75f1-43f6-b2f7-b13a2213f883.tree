@@ -2,11 +2,8 @@
 <Tree>
   <Node Id="b53e85df-75f1-43f6-b2f7-b13a2213f883">
     <Caption><![CDATA[Planning]]></Caption>
-    <Node Id="ee2363a5-6eb5-4590-bc15-2fbe591535c2">
-      <Caption><![CDATA[Provide component to access API doc to Plainion.Core]]></Caption>
-    </Node>
-    <Node Id="b1d2bcbf-4fe8-4c84-a160-2b0b66ce0bd7">
-      <Caption><![CDATA[Provide MarkDown writer for API doc to Plainion.Core]]></Caption>
+    <Node Id="48899dab-b55c-4b21-b5ba-d057e53b7496">
+      <Caption><![CDATA[rethink packaging]]></Caption>
     </Node>
     <Node Id="fccbec16-87ac-4f10-bc7e-30c7a4eb85f2">
       <Caption><![CDATA[split files]]></Caption>

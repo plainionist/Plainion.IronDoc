@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Node Id="48899dab-b55c-4b21-b5ba-d057e53b7496" Created="636082426197331287" LastModified="636082472923331287">
+  <Caption><![CDATA[rethink packaging]]></Caption>
+  <Content><![CDATA[separate "project inclusion of AfterBuild hook" from the "library"
+
+==> 2 nuget packages
+- Plainion.IronDoc.AfterBuild
+- Plainion.IronDoc (exe with msbuild task included)]]></Content>
+</Node>

@@ -1,5 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Node Id="ee2363a5-6eb5-4590-bc15-2fbe591535c2" Created="636081578955927175" LastModified="636081579474384415">
-  <Caption><![CDATA[Provide component to access API doc to Plainion.Core]]></Caption>
-  <Content><![CDATA[- add tests]]></Content>
-</Node>
