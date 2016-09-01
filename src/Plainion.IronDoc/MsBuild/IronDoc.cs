@@ -4,7 +4,7 @@ using System.Reflection;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
-namespace Plainion.IronDoc
+namespace Plainion.IronDoc.MsBuild
 {
     public class IronDoc : Task
     {

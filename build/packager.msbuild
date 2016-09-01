@@ -18,7 +18,7 @@
     </ItemGroup>
 
     <ItemGroup Condition=" '$(Package)' == 'IronDoc.AfterBuild' ">
-        <NugetBuild Include="$(OutputPath)\Plainion.IronDoc.targets"/>
+        <NugetBuild Include="$(OutputPath)\MsBuild\Plainion.IronDoc.targets"/>
     </ItemGroup>
 
     <Target Name="CreatePackage">
