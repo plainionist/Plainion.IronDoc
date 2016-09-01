@@ -68,7 +68,7 @@ namespace Plainion.IronDoc
             Console.WriteLine( "Options:" );
             Console.WriteLine( "  -h                 - Prints this help" );
             Console.WriteLine( "  -assembly <file>   - .Net assembly to generate documention for" );
-            Console.WriteLine( "  -output <file>     - full path to output file" );
+            Console.WriteLine( "  -output <dir>      - full path to output folder" );
         }
     }
 }

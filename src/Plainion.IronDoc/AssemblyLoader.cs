@@ -78,7 +78,7 @@ namespace Plainion.IronDoc
             // Load assembly from byte[] to avoid getting the file locked by our process
 
             byte[] assemblyBytes = File.ReadAllBytes(assemblyFile);
-            return Assembly.Load( assemblyBytes );
+            return Assembly.ReflectionOnlyLoad( assemblyBytes );
         }
     }
 }

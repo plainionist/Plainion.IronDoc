@@ -12,7 +12,7 @@ namespace Plainion.IronDoc.MsBuild
         public string Assembly { get; set; }
 
         [Output]
-        public string MarkdownDoc { get; set; }
+        public string Output { get; set; }
 
         public override bool Execute()
         {
@@ -23,21 +23,23 @@ namespace Plainion.IronDoc.MsBuild
                 using (var loader = new AssemblyLoader())
                 {
                     var transformer = new XmlDocTransformer(loader);
-                    transformer.Transform(Assembly, MarkdownDoc);
+                    transformer.Transform(Assembly, Output);
+
+                    Log.LogMessage(MessageImportance.Normal, "IronDoc generation Finished. Output written to: {0}", Output);
 
                     return true;
                 }
             }
             catch (ReflectionTypeLoadException ex)
             {
-                foreach (var msg in ex.LoaderExceptions.Select(e => e.Message))
+                foreach (var msg in ex.LoaderExceptions.Select(e => e.Message.ToString()))
                 {
                     Log.LogError(msg);
                 }
             }
             catch (Exception ex)
             {
-                Log.LogError(ex.Message);
+                Log.LogError(ex.ToString());
             }
 
             return false;
