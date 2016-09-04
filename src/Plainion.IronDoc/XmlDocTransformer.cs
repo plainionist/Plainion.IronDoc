@@ -12,7 +12,7 @@ namespace Plainion.IronDoc
     {
         private readonly AssemblyLoader myLoader;
         private TextWriter myWriter;
-        private XmlDocDocument myDocument;
+        private XmlDocDocument.Contents myDocument;
 
         public XmlDocTransformer(AssemblyLoader loader)
         {
@@ -32,11 +32,11 @@ namespace Plainion.IronDoc
 
             using (var writer = new StreamWriter(Path.Combine(outputFolder, Path.GetFileNameWithoutExtension(assemblyFile) + ".md")))
             {
-                Transform(assembly, XmlDocDocument.Load(xmlDoc), writer);
+                Transform(assembly, XmlDocDocument.LoadFile(xmlDoc), writer);
             }
         }
 
-        internal void Transform(Assembly assembly, XmlDocDocument xmlDoc, TextWriter writer)
+        internal void Transform(Assembly assembly, XmlDocDocument.Contents xmlDoc, TextWriter writer)
         {
             myWriter = writer;
             myDocument = xmlDoc;
@@ -50,7 +50,7 @@ namespace Plainion.IronDoc
             }
         }
 
-        internal void Transform(Type type, XmlDocDocument xmlDoc, TextWriter writer)
+        internal void Transform(Type type, XmlDocDocument.Contents xmlDoc, TextWriter writer)
         {
             myWriter = writer;
             myDocument = xmlDoc;

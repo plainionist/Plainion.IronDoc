@@ -26,6 +26,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Fakes\OverwrittenMethods.cs" />
+    <Compile Include="Fakes\NestedType.cs" />
     <Compile Include="Fakes\XmlDocSamples.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="XmlDocToMarkdownTests.cs" />

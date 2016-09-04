@@ -10,7 +10,7 @@ namespace Plainion.IronDoc.Tests
     class XmlDocToMarkdownTests
     {
         private XmlDocTransformer myTransformer;
-        private XmlDocDocument myXmlDocumentation;
+        private XmlDocDocument.Contents myXmlDocumentation;
 
         [TestFixtureSetUp]
         public void FixtureSetUp()
@@ -22,7 +22,7 @@ namespace Plainion.IronDoc.Tests
             var assembly = GetType().Assembly;
             var docFile = Path.Combine( Path.GetDirectoryName( assembly.Location ), Path.GetFileNameWithoutExtension( assembly.Location ) + ".xml" );
 
-            myXmlDocumentation = XmlDocDocument.Load( docFile );
+            myXmlDocumentation = XmlDocDocument.LoadFile( docFile );
         }
 
         [Test]
@@ -42,6 +42,14 @@ This is a summary
             var markdownDocument = Transform( typeof( OverwrittenMethods ) );
 
             Assert.That( markdownDocument, Does.Contain( @"Returns nicely formatted message about the state of this object" ) );
+        }
+
+        [Test]
+        public void NestedTypes()
+        {
+            var markdownDocument = Transform( typeof( NestedType.Nested ) );
+
+            Assert.That( markdownDocument, Does.Contain( @"I am nested" ) );
         }
 
         private string Transform( Type type )
