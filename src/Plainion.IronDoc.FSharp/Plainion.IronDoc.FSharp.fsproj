@@ -43,6 +43,7 @@
     <Compile Include="Utils.fs" />
     <Compile Include="AssemblyLoader.fs" />
     <Compile Include="XmlDocDocument.fs" />
+    <Compile Include="XmlDocTransformer.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />
