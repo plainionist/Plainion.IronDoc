@@ -51,12 +51,6 @@ module internal LoaderUtils =
                 else
                     loadAssembly x
 
-type internal Guard( on, off ) =
-    do on()
-
-    interface IDisposable with
-        member x.Dispose() = 
-            off()
     
 type AssemblyLoader() =
     let mutable myAssemblyBaseDirs = [ AppDomain.CurrentDomain.BaseDirectory ]
@@ -80,6 +74,6 @@ type AssemblyLoader() =
             AppDomain.CurrentDomain.remove_AssemblyResolve onAssemblyResolve
             AppDomain.CurrentDomain.remove_ReflectionOnlyAssemblyResolve onReflectionOnlyAssemblyResolve
 
-        use g = new Guard( register, unregister )
+        use g = new Interop.Guard( register, unregister )
 
         LoaderUtils.loadAssembly assemblyFile
