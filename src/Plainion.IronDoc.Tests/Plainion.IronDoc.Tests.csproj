@@ -31,6 +31,10 @@
     <Compile Include="XmlDocToMarkdownTests.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Plainion.IronDoc.FSharp\Plainion.IronDoc.FSharp.fsproj">
+      <Project>{ac46f814-6763-41b2-a4d2-e1fb457091ee}</Project>
+      <Name>Plainion.IronDoc.FSharp</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Plainion.IronDoc\Plainion.IronDoc.csproj">
       <Project>{0596ca66-e899-4637-9535-e61126971b48}</Project>
       <Name>Plainion.IronDoc</Name>

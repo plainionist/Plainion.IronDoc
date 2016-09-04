@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using NUnit.Framework;
+using Plainion.IronDoc.FSharp;
 using Plainion.IronDoc.Tests.Fakes;
 
 namespace Plainion.IronDoc.Tests
@@ -14,41 +15,40 @@ namespace Plainion.IronDoc.Tests
         [TestFixtureSetUp]
         public void FixtureSetUp()
         {
-            using (var loader = new AssemblyLoader())
-            {
-                myTransformer = new XmlDocTransformer(loader);
+            var loader = new AssemblyLoader();
 
-                var assembly = GetType().Assembly;
-                var docFile = Path.Combine(Path.GetDirectoryName(assembly.Location), Path.GetFileNameWithoutExtension(assembly.Location) + ".xml");
+            myTransformer = new XmlDocTransformer( loader );
 
-                myXmlDocumentation = XmlDocDocument.Load(docFile);
-            }
+            var assembly = GetType().Assembly;
+            var docFile = Path.Combine( Path.GetDirectoryName( assembly.Location ), Path.GetFileNameWithoutExtension( assembly.Location ) + ".xml" );
+
+            myXmlDocumentation = XmlDocDocument.Load( docFile );
         }
 
         [Test]
         public void SimpleSummary()
         {
-            var markdownDocument = Transform(typeof(SimplePublicClass));
+            var markdownDocument = Transform( typeof( SimplePublicClass ) );
 
-            Assert.That(markdownDocument, Does.Contain(@"
+            Assert.That( markdownDocument, Does.Contain( @"
 ## Plainion.IronDoc.Tests.Fakes.SimplePublicClass
 This is a summary
-"));
+" ) );
         }
 
         [Test]
         public void OverwrittenMethods()
         {
-            var markdownDocument = Transform(typeof(OverwrittenMethods));
+            var markdownDocument = Transform( typeof( OverwrittenMethods ) );
 
-            Assert.That(markdownDocument, Does.Contain(@"Returns nicely formatted message about the state of this object"));
+            Assert.That( markdownDocument, Does.Contain( @"Returns nicely formatted message about the state of this object" ) );
         }
 
-        private string Transform(Type type)
+        private string Transform( Type type )
         {
-            using (var writer = new StringWriter())
+            using( var writer = new StringWriter() )
             {
-                myTransformer.Transform(type, myXmlDocumentation, writer);
+                myTransformer.Transform( type, myXmlDocumentation, writer );
                 return writer.ToString();
             }
         }

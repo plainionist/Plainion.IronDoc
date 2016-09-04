@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using Plainion.IronDoc.FSharp;
 
 namespace Plainion.IronDoc
 {
@@ -54,11 +55,10 @@ namespace Plainion.IronDoc
                 Console.WriteLine( "Generating documentation to: {0}", outputFile );
             }
 
-            using( var loader = new AssemblyLoader() )
-            {
-                var transformer = new XmlDocTransformer( loader );
-                transformer.Transform( assembly, outputFile );
-            }
+            var loader = new AssemblyLoader();
+
+            var transformer = new XmlDocTransformer( loader );
+            transformer.Transform( assembly, outputFile );
         }
 
         private static void Usage()

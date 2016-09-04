@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Plainion.IronDoc.FSharp;
 
 namespace Plainion.IronDoc.MsBuild
 {
@@ -16,30 +17,29 @@ namespace Plainion.IronDoc.MsBuild
 
         public override bool Execute()
         {
-            Log.LogMessage(MessageImportance.Normal, "IronDoc generation started");
+            Log.LogMessage( MessageImportance.Normal, "IronDoc generation started" );
 
             try
             {
-                using (var loader = new AssemblyLoader())
+                var loader = new AssemblyLoader();
+
+                var transformer = new XmlDocTransformer( loader );
+                transformer.Transform( Assembly, Output );
+
+                Log.LogMessage( MessageImportance.Normal, "IronDoc generation Finished. Output written to: {0}", Output );
+
+                return true;
+            }
+            catch( ReflectionTypeLoadException ex )
+            {
+                foreach( var msg in ex.LoaderExceptions.Select( e => e.Message.ToString() ) )
                 {
-                    var transformer = new XmlDocTransformer(loader);
-                    transformer.Transform(Assembly, Output);
-
-                    Log.LogMessage(MessageImportance.Normal, "IronDoc generation Finished. Output written to: {0}", Output);
-
-                    return true;
+                    Log.LogError( msg );
                 }
             }
-            catch (ReflectionTypeLoadException ex)
+            catch( Exception ex )
             {
-                foreach (var msg in ex.LoaderExceptions.Select(e => e.Message.ToString()))
-                {
-                    Log.LogError(msg);
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.LogError(ex.ToString());
+                Log.LogError( ex.ToString() );
             }
 
             return false;
