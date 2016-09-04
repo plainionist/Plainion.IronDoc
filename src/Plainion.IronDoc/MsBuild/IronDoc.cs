@@ -24,7 +24,7 @@ namespace Plainion.IronDoc.MsBuild
                 var loader = new AssemblyLoader();
 
                 var transformer = new XmlDocTransformer( loader );
-                transformer.Transform( Assembly, Output );
+                transformer.TransformFile( Assembly, Output );
 
                 Log.LogMessage( MessageImportance.Normal, "IronDoc generation Finished. Output written to: {0}", Output );
 

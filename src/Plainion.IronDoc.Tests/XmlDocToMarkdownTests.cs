@@ -56,7 +56,7 @@ This is a summary
         {
             using( var writer = new StringWriter() )
             {
-                myTransformer.Transform( type, myXmlDocumentation, writer );
+                myTransformer.TransformType( type, myXmlDocumentation, writer );
                 return writer.ToString();
             }
         }

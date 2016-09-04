@@ -58,7 +58,7 @@ namespace Plainion.IronDoc
             var loader = new AssemblyLoader();
 
             var transformer = new XmlDocTransformer( loader );
-            transformer.Transform( assembly, outputFile );
+            transformer.TransformFile( assembly, outputFile );
         }
 
         private static void Usage()
