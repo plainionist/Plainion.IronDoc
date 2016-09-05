@@ -1,6 +1,4 @@
-﻿#light
-
-module Plainion.IronDoc.FSharp.Utils
+﻿module Plainion.IronDoc.FSharp.Utils
 
 open System.Text.RegularExpressions
 

@@ -40,7 +40,7 @@
     </Compile>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Interop.fs" />
-    <Compile Include="Utils.fs" />
+    <Compile Include="Extensions.fs" />
     <Compile Include="AssemblyLoader.fs" />
     <Compile Include="XmlDocDocument.fs" />
     <Compile Include="XmlDocTransformer.fs" />
