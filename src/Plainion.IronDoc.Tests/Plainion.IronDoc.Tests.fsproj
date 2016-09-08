@@ -3,20 +3,19 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <Import Project="..\..\build\Globals.msbuild" />
   <PropertyGroup>
-    <ProjectGuid>ac46f814-6763-41b2-a4d2-e1fb457091ee</ProjectGuid>
+    <ProjectGuid>03090D1F-DC23-43A0-B80C-D1D03ED72DBE</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>Plainion.IronDoc.FSharp</RootNamespace>
-    <AssemblyName>Plainion.IronDoc.FSharp</AssemblyName>
-    <Name>Plainion.IronDoc.FSharp</Name>
+    <RootNamespace>Plainion.IronDoc.Tests</RootNamespace>
+    <AssemblyName>Plainion.IronDoc.Tests</AssemblyName>
     <TargetFSharpCoreVersion>4.3.1.0</TargetFSharpCoreVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <Tailcalls>false</Tailcalls>
-    <DocumentationFile>bin\Debug\Plainion.IronDoc.FSharp.XML</DocumentationFile>
+    <DocumentationFile>..\..\bin\Debug\Plainion.IronDoc.Tests.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Tailcalls>true</Tailcalls>
-    <DocumentationFile>bin\Release\Plainion.IronDoc.FSharp.XML</DocumentationFile>
+    <DocumentationFile>..\..\bin\Release\Plainion.IronDoc.Tests.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>
@@ -38,28 +37,34 @@
     <Compile Include="..\..\build\GlobalAssemblyInfo.fs">
       <Link>Properties\GlobalAssemblyInfo.fs</Link>
     </Compile>
-    <Content Include="MsBuild\Plainion.IronDoc.targets">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="Interop.fs" />
-    <Compile Include="Extensions.fs" />
-    <Compile Include="AssemblyLoader.fs" />
-    <Compile Include="XmlDocDocument.fs" />
-    <Compile Include="XmlDocTransformer.fs" />
-    <Compile Include="MsBuild.fs" />
+    <Compile Include="Fakes.fs" />
+    <Compile Include="XmlDocToMarkdownTests.fs" />
+    <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="Microsoft.Build.Framework" />
-    <Reference Include="Microsoft.Build.Utilities.v4.0" />
-    <Reference Include="mscorlib" />
-    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+    <Reference Include="nunit.framework, Version=3.4.1.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\NUnit.3.4.1\lib\net45\nunit.framework.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Xml" />
+    <Reference Include="System.XML" />
     <Reference Include="System.Xml.Linq" />
+    <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+      <Private>True</Private>
+    </Reference>
+    <ProjectReference Include="..\Plainion.IronDoc.FSharp\Plainion.IronDoc.FSharp.fsproj">
+      <Project>{ac46f814-6763-41b2-a4d2-e1fb457091ee}</Project>
+      <Name>Plainion.IronDoc.FSharp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Plainion.IronDoc.Tests.Fakes\Plainion.IronDoc.Tests.Fakes.csproj">
+      <Name>Plainion.IronDoc.Tests.Fakes</Name>
+      <Project>{474abc8e-45b2-4d63-af9d-13e1c8eba714}</Project>
+      <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\Plainion.IronDoc\Plainion.IronDoc.csproj">
+      <Project>{0596ca66-e899-4637-9535-e61126971b48}</Project>
+      <Name>Plainion.IronDoc</Name>
+    </ProjectReference>
   </ItemGroup>
 </Project>
