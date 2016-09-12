@@ -6,7 +6,7 @@ module AssemblyInfo' =
     open System.Reflection
     open System.Runtime.InteropServices
 
-    [<assembly: AssemblyTitle("Plainion.IronDoc.FSharp")>]
+    [<assembly: AssemblyTitle("Plainion.IronDoc")>]
     [<assembly: ComVisible( false )>]
 
     do()
