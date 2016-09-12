@@ -1,4 +1,4 @@
-﻿namespace Plainion.IronDoc.Tests
+﻿namespace Plainion.IronDoc
 
 module AssemblyInfo' =
 
@@ -6,7 +6,7 @@ module AssemblyInfo' =
     open System.Reflection
     open System.Runtime.InteropServices
 
-    [<assembly: AssemblyTitle("Plainion.IronDoc.Tests")>]
+    [<assembly: AssemblyTitle("Plainion.IronDoc")>]
     [<assembly: ComVisible( false )>]
 
     do()
