@@ -38,9 +38,10 @@
       <Link>Properties\GlobalAssemblyInfo.fs</Link>
     </Compile>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Core.fs" />
     <Compile Include="Fakes.fs" />
-    <Compile Include="XmlDocToMarkdownTests.fs" />
     <None Include="packages.config" />
+    <Compile Include="XmlDocToMarkdownTests.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="nunit.framework, Version=3.4.1.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
