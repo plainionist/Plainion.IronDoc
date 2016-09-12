@@ -37,19 +37,19 @@ module XmlDocToMarkdownTests =
         writer.ToString();
 
     [<Test>]
-    let SimpleSummary () = 
+    let ``Simple class summary rendered`` () = 
         let markdownDocument = transform typedefof<SimplePublicClass>
 
         Assert.That( markdownDocument, Does.Contain "This is a summary" )
 
     [<Test>]
-    let OverwrittenMethods() =
+    let ``Overwritten method is rendered``() =
         let markdownDocument = transform typedefof<OverwrittenMethods>
 
         Assert.That( markdownDocument, Does.Contain @"Returns nicely formatted message about the state of this object" )
 
     [<Test>]
-    let NestedTypes() =
+    let ``Nested type summary is rendered``() =
         let markdownDocument = transform typedefof<NestedType.Nested>
 
         Assert.That( markdownDocument, Does.Contain @"I am nested" )
