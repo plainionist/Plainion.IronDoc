@@ -41,9 +41,14 @@
     <Compile Include="Core.fs" />
     <Compile Include="Fakes.fs" />
     <None Include="packages.config" />
-    <Compile Include="XmlDocToMarkdownTests.fs" />
+    <Compile Include="ScenarioTests.fs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Plainion.IronDoc\Plainion.IronDoc.fsproj">
+      <Name>Plainion.IronDoc</Name>
+      <Project>{0596ca66-e899-4637-9535-e61126971b48}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <Reference Include="nunit.framework, Version=3.4.1.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
       <HintPath>..\..\packages\NUnit.3.4.1\lib\net45\nunit.framework.dll</HintPath>
       <Private>True</Private>
@@ -54,18 +59,10 @@
     <Reference Include="FSharp.Core, Version=$(TargetFSharpCoreVersion), Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
       <Private>True</Private>
     </Reference>
-    <ProjectReference Include="..\Plainion.IronDoc.FSharp\Plainion.IronDoc.FSharp.fsproj">
-      <Project>{ac46f814-6763-41b2-a4d2-e1fb457091ee}</Project>
-      <Name>Plainion.IronDoc.FSharp</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Plainion.IronDoc.Tests.Fakes\Plainion.IronDoc.Tests.Fakes.csproj">
       <Name>Plainion.IronDoc.Tests.Fakes</Name>
       <Project>{474abc8e-45b2-4d63-af9d-13e1c8eba714}</Project>
       <Private>True</Private>
-    </ProjectReference>
-    <ProjectReference Include="..\Plainion.IronDoc\Plainion.IronDoc.csproj">
-      <Project>{0596ca66-e899-4637-9535-e61126971b48}</Project>
-      <Name>Plainion.IronDoc</Name>
     </ProjectReference>
   </ItemGroup>
 </Project>
