@@ -109,6 +109,7 @@ let assemblyLoader =
 
 type MemberDoc =
     | Xml of XElement
+    | Missing
 
 let getMemberName (memberInfo : MemberInfo) = 
     match memberInfo.MemberType with
@@ -148,16 +149,17 @@ let getMemberElementName (mi : MemberInfo) =
 
 type XmlDocDocument = { AssemblyName : string
                         Members : XElement list } 
-
+    
 let GetXmlDocumentation xmlDoc memberInfo = 
     let memberName = getMemberElementName memberInfo
     let doc = xmlDoc.Members |> Seq.tryFind (fun m -> m.Attribute(!!"name").Value = memberName)
     match doc with
-    | Some x -> x
-    | None -> null
-    
+    | Some x -> Xml(x)
+    | None -> Missing
+
 let LoadApiDoc (root : XElement) = 
     { XmlDocDocument.AssemblyName = root.Element(!!"assembly").Element(!!"name").Value
       XmlDocDocument.Members = root.Element(!!"members").Elements(!!"member") |> List.ofSeq }
     
-let LoadApiDocFile(file : string) = LoadApiDoc(XElement.Load file)
+let LoadApiDocFile(file : string) = 
+    LoadApiDoc(XElement.Load file)

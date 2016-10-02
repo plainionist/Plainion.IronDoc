@@ -152,8 +152,10 @@ let processMemberDoc ctx (memb :XElement) (level :int) =
     tryProcessSee ctx (memb.Element(!!"see"))
     tryProcessSeeAlso ctx (memb.Element(!!"seealso"))
 
-let tryProcessMemberDoc ctx memb level = 
-    if memb <> null then processMemberDoc ctx memb level
+let tryProcessMemberDoc ctx memDoc level = 
+    match memDoc with
+    | Xml xml -> processMemberDoc ctx xml level
+    | Missing -> ()
 
 let processMember ctx memb ( getMemberName : _ -> string) =
     ctx.Writer.WriteLine()
