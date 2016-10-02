@@ -56,31 +56,60 @@ module internal LoaderUtils =
                     loadAssembly x
 
     
-type AssemblyLoader() =
-    let mutable myAssemblyBaseDirs = [ AppDomain.CurrentDomain.BaseDirectory ]
-    
-    let onAssemblyResolve = System.ResolveEventHandler( fun _ e ->
-        match ( LoaderUtils.resolveAssembly e.Name ) with
-        | Some x -> x
-        | None -> null )
+type LoadAssemblyMsg = 
+    | LoadAssembly of string * replyChannel : AsyncReplyChannel<Assembly>
+    | Stop 
 
-    let onReflectionOnlyAssemblyResolve = System.ResolveEventHandler( fun _ e ->
-        myAssemblyBaseDirs |> LoaderUtils.resolveReflectionOnlyAssembly e.Name )
+// https://kimsereyblog.blogspot.de/2016/07/manage-mutable-state-using-actors-with.html
+type AssemblyLoaderApi = {
+    Load: string -> Assembly
+    Stop: unit -> unit
+}
 
-    member this.Load assemblyFile =
-        myAssemblyBaseDirs = Path.GetDirectoryName(assemblyFile) :: myAssemblyBaseDirs |> ignore
+module AssemblyLoader = 
+    let instance =
+        let agent = MailboxProcessor<LoadAssemblyMsg>.Start(fun inbox ->
+            let loadAssembly baseDirs assembly = 
+                let newBaseDirs = Path.GetDirectoryName(assembly) :: baseDirs
+                                  |> Seq.distinct
+                                  |> List.ofSeq
 
-        let register () =
-            AppDomain.CurrentDomain.add_AssemblyResolve onAssemblyResolve
-            AppDomain.CurrentDomain.add_ReflectionOnlyAssemblyResolve onReflectionOnlyAssemblyResolve
+                let onAssemblyResolve = System.ResolveEventHandler( fun _ e ->
+                    match ( LoaderUtils.resolveAssembly e.Name ) with
+                    | Some x -> x
+                    | None -> null )
+
+                let onReflectionOnlyAssemblyResolve = System.ResolveEventHandler( fun _ e ->
+                    newBaseDirs |> LoaderUtils.resolveReflectionOnlyAssembly e.Name )
+
+                let register () =
+                    AppDomain.CurrentDomain.add_AssemblyResolve onAssemblyResolve
+                    AppDomain.CurrentDomain.add_ReflectionOnlyAssemblyResolve onReflectionOnlyAssemblyResolve
         
-        let unregister () =     
-            AppDomain.CurrentDomain.remove_AssemblyResolve onAssemblyResolve
-            AppDomain.CurrentDomain.remove_ReflectionOnlyAssemblyResolve onReflectionOnlyAssemblyResolve
+                let unregister () =     
+                    AppDomain.CurrentDomain.remove_AssemblyResolve onAssemblyResolve
+                    AppDomain.CurrentDomain.remove_ReflectionOnlyAssemblyResolve onReflectionOnlyAssemblyResolve
 
-        use g = new Interop.Guard( register, unregister )
+                use g = new Interop.Guard( register, unregister )
 
-        LoaderUtils.loadAssembly assemblyFile
+                newBaseDirs, LoaderUtils.loadAssembly assembly
+
+            let rec loop baseDirs =
+                async {
+                    let! msg = inbox.Receive()
+
+                    match msg with
+                    | LoadAssembly (file, replyChannel) -> 
+                        let newBaseDirs, assembly = file |> loadAssembly baseDirs
+                    
+                        replyChannel.Reply assembly
+
+                        return! loop newBaseDirs
+                    | Stop -> return ()
+                }
+            loop [ AppDomain.CurrentDomain.BaseDirectory ] ) 
+        { Load = fun assembly -> agent.PostAndReply( fun replyChannel -> LoadAssembly( assembly, replyChannel ) )
+          Stop = fun () -> agent.Post Stop }
 
 module XmlDocDocument = 
     let private (!!) : string -> XName = Interop.implicit

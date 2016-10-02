@@ -8,7 +8,7 @@ open System.Reflection
 open System.Xml.Linq
 
 type internal TransformationContext = 
-    { Loader : AssemblyLoader
+    { Loader : AssemblyLoaderApi
       Writer : TextWriter
       Doc : XmlDocDocument.Contents }
 
@@ -240,7 +240,7 @@ module internal Transformer =
             (t.GetMethods(bindingFlags) |> Seq.filter( fun m -> not m.IsSpecialName) |> Seq.filter( fun m -> not m.IsPrivate))
             (fun m -> getMemberName m)
 
-type XmlDocTransformer(loader : AssemblyLoader) = 
+type XmlDocTransformer(loader : AssemblyLoaderApi) = 
     let myLoader = loader
     
     member this.TransformType t xmlDoc writer = 

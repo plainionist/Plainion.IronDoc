@@ -72,9 +72,7 @@ let main argv =
     | Some x ->
         printf "Generating documentation to: %s" x.output
 
-        let loader = new AssemblyLoader()
-
-        let transformer = new XmlDocTransformer( loader )
+        let transformer = new XmlDocTransformer( AssemblyLoader.instance )
         transformer.TransformFile x.assembly x.output
 
         0

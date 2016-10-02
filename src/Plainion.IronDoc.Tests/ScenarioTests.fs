@@ -20,8 +20,7 @@ module XmlDocToMarkdownTests =
         memoize ( fun t -> getApiDoc t )
 
     let getTransformer () =
-        let loader = new AssemblyLoader()
-        new XmlDocTransformer( loader )
+        new XmlDocTransformer( AssemblyLoader.instance )
        
     let getTransformerCached = 
         let transformer = getTransformer
