@@ -18,20 +18,12 @@ module XmlDocToMarkdownTests =
 
     let getApiDocCached = 
         memoize ( fun t -> getApiDoc t )
-
-    let getTransformer () =
-        new XmlDocTransformer( assemblyLoader )
        
-    let getTransformerCached = 
-        let transformer = getTransformer
-        fun () -> transformer
-
     let transform ( t : Type ) =
         use writer = new StringWriter()
         
         let apiDoc = getApiDocCached t.Assembly.Location
-        let transformer = getTransformer ()
-        transformer.TransformType t apiDoc writer
+        Rendering.TransformType t apiDoc writer
         
         writer.ToString();
 

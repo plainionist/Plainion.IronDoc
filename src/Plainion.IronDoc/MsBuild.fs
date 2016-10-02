@@ -20,8 +20,7 @@ type IronDoc() =
         this.Log.LogMessage( MessageImportance.Normal, "IronDoc generation started" )
 
         try
-            let transformer = new XmlDocTransformer( assemblyLoader )
-            transformer.TransformFile this.Assembly this.Output 
+            Rendering.TransformFile this.Assembly this.Output 
 
             this.Log.LogMessage( MessageImportance.Normal, "IronDoc generation Finished. Output written to: {0}", this.Output )
 
