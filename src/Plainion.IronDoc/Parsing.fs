@@ -17,11 +17,7 @@ let reflectionOnlyLoad assemblyFile =
     let assemblyBytes = File.ReadAllBytes assemblyFile
     Assembly.ReflectionOnlyLoad assemblyBytes
 
-let resolveAssembly name =
-    AppDomain.CurrentDomain.GetAssemblies ()
-    |> Array.tryFind( fun asm -> String.Equals(asm.FullName, name, StringComparison.OrdinalIgnoreCase) )
-
-let getAssemblyPath ( assemblyName : AssemblyName ) baseDirs =
+let getAssemblyLocation ( assemblyName : AssemblyName ) baseDirs =
     let assemblyExtensions = [ ".dll"; ".exe" ]
 
     baseDirs
@@ -37,7 +33,7 @@ let resolveReflectionOnlyAssembly ( assemblyName : string ) baseDirs =
     | Some x -> x
     | None ->
         let assemblyName = new AssemblyName( assemblyName )
-        let dependentAssemblyPath = baseDirs |> getAssemblyPath assemblyName
+        let dependentAssemblyPath = baseDirs |> getAssemblyLocation assemblyName
 
         match dependentAssemblyPath with
         | None -> null
@@ -60,7 +56,10 @@ let loadAssembly baseDirs assembly =
                         |> List.ofSeq
 
     let onAssemblyResolve = System.ResolveEventHandler( fun _ e ->
-        match ( resolveAssembly e.Name ) with
+        let assembly = AppDomain.CurrentDomain.GetAssemblies ()
+                       |> Array.tryFind( fun asm -> String.Equals(asm.FullName, e.Name, StringComparison.OrdinalIgnoreCase) )
+
+        match assembly with
         | Some x -> x
         | None -> null )
 
