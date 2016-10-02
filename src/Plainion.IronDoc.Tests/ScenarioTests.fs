@@ -14,13 +14,13 @@ module XmlDocToMarkdownTests =
     let getApiDoc assemblyLocation =
         let docFile = Path.Combine( Path.GetDirectoryName( assemblyLocation ), Path.GetFileNameWithoutExtension( assemblyLocation ) + ".xml" )
 
-        XmlDocDocument.LoadFile docFile 
+        LoadApiDocFile docFile 
 
     let getApiDocCached = 
         memoize ( fun t -> getApiDoc t )
 
     let getTransformer () =
-        new XmlDocTransformer( AssemblyLoader.instance )
+        new XmlDocTransformer( assemblyLoader )
        
     let getTransformerCached = 
         let transformer = getTransformer

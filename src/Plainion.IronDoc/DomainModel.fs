@@ -1,2 +1,3 @@
-﻿namespace Plainion.IronDoc.FSharp
+﻿[<AutoOpen>]
+module Plainion.IronDoc.FSharp.DomainModel
 

@@ -10,11 +10,9 @@ open System.Xml.Linq
 type internal TransformationContext = 
     { Loader : AssemblyLoaderApi
       Writer : TextWriter
-      Doc : XmlDocDocument.Contents }
+      Doc : XmlDocDocument }
 
 module internal Transformer = 
-    let private (!!) : string -> XName = Interop.implicit
-
     let substringAfter ( value : string ) ( sep : char ) =
         let pos = value.IndexOf (sep)
         value.Substring(pos + 1)
@@ -270,6 +268,6 @@ type XmlDocTransformer(loader : AssemblyLoaderApi) =
         if not (Directory.Exists outputFolder) then Directory.CreateDirectory(outputFolder) |> ignore
 
         use writer = new StreamWriter(Path.Combine(outputFolder, Path.GetFileNameWithoutExtension(assemblyFile) + ".md"))
-        let doc = XmlDocDocument.LoadFile xmlDoc
+        let doc = LoadApiDocFile xmlDoc
         this.TransformAssembly assembly doc writer
 
