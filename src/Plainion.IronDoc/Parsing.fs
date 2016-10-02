@@ -107,54 +107,57 @@ let assemblyLoader =
     { Load = fun assembly -> agent.PostAndReply( fun replyChannel -> LoadAssembly( assembly, replyChannel ) )
       Stop = fun () -> agent.Post Stop }
 
-type XmlDocDocument(assemblyName, members : XElement list) = 
-    let getMemberName (memberInfo : MemberInfo) = 
-        match memberInfo.MemberType with
-        | MemberTypes.Constructor -> "#ctor" // XML documentation uses slightly different constructor names
-        | MemberTypes.NestedType -> memberInfo.DeclaringType.Name + "." + memberInfo.Name
-        | _ -> memberInfo.Name
-    
-    let getFullMemberName (memberInfo : MemberInfo) = 
-        match memberInfo with
-        | :? Type as t -> t.Namespace + "." + (getMemberName memberInfo) // member is a Type
-        | _ -> memberInfo.DeclaringType.FullName + "." + (getMemberName memberInfo)
-    
-    /// elements are of the form "M:Namespace.Class.Method"
-    let getMemberId prefixCode memberName = sprintf "%s:%s" prefixCode memberName
-    
-    /// parameters are listed according to their type, not their name
-    let getMethodParameterSignature (memberInfo : MemberInfo) = 
-        let parameters = (memberInfo :?> MethodBase).GetParameters()
-        match parameters with
-        | [||] -> ""
-        | _ -> 
-            "(" + (parameters
-                    |> Seq.map (fun p -> p.ParameterType.FullName)
-                    |> String.concat ",")
-            + ")"
-    
-    let getMemberElementName (mi : MemberInfo) = 
-        match mi.MemberType with
-        | MemberTypes.Constructor -> getMemberId "M" (getFullMemberName mi + getMethodParameterSignature mi)
-        | MemberTypes.Method -> getMemberId "M" (getFullMemberName mi + getMethodParameterSignature mi)
-        | MemberTypes.Event -> getMemberId "E" (getFullMemberName mi)
-        | MemberTypes.Field -> getMemberId "F" (getFullMemberName mi)
-        | MemberTypes.NestedType -> getMemberId "T" (getFullMemberName mi)
-        | MemberTypes.TypeInfo -> getMemberId "T" (getFullMemberName mi)
-        | MemberTypes.Property -> getMemberId "P" (getFullMemberName mi)
-        | _ -> failwith "Unknown MemberType: " + mi.MemberType.ToString()
+type MemberDoc =
+    | Xml of XElement
 
-    member this.AssemblyName = assemblyName
-    member this.Members = members
-    member this.GetXmlDocumentation memberInfo = 
-        let memberName = getMemberElementName memberInfo
-        let doc = this.Members |> Seq.tryFind (fun m -> m.Attribute(!!"name").Value = memberName)
-        match doc with
-        | Some x -> x
-        | None -> null
+let getMemberName (memberInfo : MemberInfo) = 
+    match memberInfo.MemberType with
+    | MemberTypes.Constructor -> "#ctor" // XML documentation uses slightly different constructor names
+    | MemberTypes.NestedType -> memberInfo.DeclaringType.Name + "." + memberInfo.Name
+    | _ -> memberInfo.Name
     
-let LoadApiDoc(root : XElement) = 
-    new XmlDocDocument(root.Element(!!"assembly").Element(!!"name").Value, 
-                    root.Element(!!"members").Elements(!!"member") |> List.ofSeq)
+let getFullMemberName (memberInfo : MemberInfo) = 
+    match memberInfo with
+    | :? Type as t -> t.Namespace + "." + (getMemberName memberInfo) // member is a Type
+    | _ -> memberInfo.DeclaringType.FullName + "." + (getMemberName memberInfo)
+    
+/// elements are of the form "M:Namespace.Class.Method"
+let getMemberId prefixCode memberName = sprintf "%s:%s" prefixCode memberName
+    
+/// parameters are listed according to their type, not their name
+let getMethodParameterSignature (memberInfo : MemberInfo) = 
+    let parameters = (memberInfo :?> MethodBase).GetParameters()
+    match parameters with
+    | [||] -> ""
+    | _ -> 
+        "(" + (parameters
+                |> Seq.map (fun p -> p.ParameterType.FullName)
+                |> String.concat ",")
+        + ")"
+    
+let getMemberElementName (mi : MemberInfo) = 
+    match mi.MemberType with
+    | MemberTypes.Constructor -> getMemberId "M" (getFullMemberName mi + getMethodParameterSignature mi)
+    | MemberTypes.Method -> getMemberId "M" (getFullMemberName mi + getMethodParameterSignature mi)
+    | MemberTypes.Event -> getMemberId "E" (getFullMemberName mi)
+    | MemberTypes.Field -> getMemberId "F" (getFullMemberName mi)
+    | MemberTypes.NestedType -> getMemberId "T" (getFullMemberName mi)
+    | MemberTypes.TypeInfo -> getMemberId "T" (getFullMemberName mi)
+    | MemberTypes.Property -> getMemberId "P" (getFullMemberName mi)
+    | _ -> failwith "Unknown MemberType: " + mi.MemberType.ToString()
+
+type XmlDocDocument = { AssemblyName : string
+                        Members : XElement list } 
+
+let GetXmlDocumentation xmlDoc memberInfo = 
+    let memberName = getMemberElementName memberInfo
+    let doc = xmlDoc.Members |> Seq.tryFind (fun m -> m.Attribute(!!"name").Value = memberName)
+    match doc with
+    | Some x -> x
+    | None -> null
+    
+let LoadApiDoc (root : XElement) = 
+    { XmlDocDocument.AssemblyName = root.Element(!!"assembly").Element(!!"name").Value
+      XmlDocDocument.Members = root.Element(!!"members").Elements(!!"member") |> List.ofSeq }
     
 let LoadApiDocFile(file : string) = LoadApiDoc(XElement.Load file)

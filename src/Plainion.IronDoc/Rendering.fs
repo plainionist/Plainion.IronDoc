@@ -163,7 +163,7 @@ let processMember ctx memb ( getMemberName : _ -> string) =
 
     ctx.Writer.WriteLine()
 
-    tryProcessMemberDoc ctx ( ctx.Doc.GetXmlDocumentation memb ) 4
+    tryProcessMemberDoc ctx ( GetXmlDocumentation ctx.Doc memb ) 4
 
 let processMembers ctx ( headline : string ) allMembers getMemberName = 
     let members = allMembers |> List.ofSeq
@@ -203,7 +203,7 @@ let processType (ctx : TransformationContext) (t : Type) =
     ctx.Writer.Write "## "
     ctx.Writer.WriteLine t.FullName
 
-    tryProcessMemberDoc ctx (ctx.Doc.GetXmlDocumentation t) 2
+    tryProcessMemberDoc ctx (GetXmlDocumentation ctx.Doc t) 2
 
     let bindingFlags = BindingFlags.Instance ||| BindingFlags.Static ||| BindingFlags.Public ||| BindingFlags.DeclaredOnly
 
