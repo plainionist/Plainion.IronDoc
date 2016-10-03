@@ -67,7 +67,7 @@ let tryProcessC ctx (e:XElement) =
         ctx.Writer.WriteLine ( normalizeSpace e.Value )
         ctx.Writer.WriteLine "```"
 
-let processMemberDoc ctx (memb :XElement) (level :int) = 
+let processXml ctx (memb :XElement) (level :int) = 
     memb.Elements(!!"summary")
     |> Seq.iter( fun s -> 
         ctx.Writer.WriteLine(normalizeSpace s.Value )
@@ -154,9 +154,9 @@ let processMemberDoc ctx (memb :XElement) (level :int) =
 
 let tryProcessMemberDoc ctx memDoc level = 
     match memDoc with
-    | Xml xml -> processMemberDoc ctx xml level
-    | Missing -> ()
-
+    | None -> ()
+    | Some doc -> processXml ctx doc.Xml level
+                  
 let processMember ctx memb ( getMemberName : _ -> string) =
     ctx.Writer.WriteLine()
 

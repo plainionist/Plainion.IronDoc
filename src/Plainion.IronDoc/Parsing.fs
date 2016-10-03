@@ -107,10 +107,6 @@ let assemblyLoader =
     { Load = fun assembly -> agent.PostAndReply( fun replyChannel -> LoadAssembly( assembly, replyChannel ) )
       Stop = fun () -> agent.Post Stop }
 
-type MemberDoc =
-    | Xml of XElement
-    | Missing
-
 let getMemberName (memberInfo : MemberInfo) = 
     match memberInfo.MemberType with
     | MemberTypes.Constructor -> "#ctor" // XML documentation uses slightly different constructor names
@@ -149,13 +145,15 @@ let getMemberElementName (mi : MemberInfo) =
 
 type XmlDocDocument = { AssemblyName : string
                         Members : XElement list } 
-    
+
+// ignored: <include/> <list/> <permission/>
 let GetXmlDocumentation xmlDoc memberInfo = 
     let memberName = getMemberElementName memberInfo
     let doc = xmlDoc.Members |> Seq.tryFind (fun m -> m.Attribute(!!"name").Value = memberName)
     match doc with
-    | Some x -> Xml(x)
-    | None -> Missing
+    | Some d -> Some { Xml = d
+                       Summary = [] }
+    | None -> None
 
 let LoadApiDoc (root : XElement) = 
     { XmlDocDocument.AssemblyName = root.Element(!!"assembly").Element(!!"name").Value
