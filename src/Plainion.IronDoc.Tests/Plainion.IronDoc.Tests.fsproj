@@ -39,9 +39,9 @@
     </Compile>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Core.fs" />
-    <Compile Include="Fakes.fs" />
     <None Include="packages.config" />
-    <Compile Include="ScenarioTests.fs" />
+    <Compile Include="ParsingTests.fs" />
+    <Compile Include="AcceptanceTests.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Plainion.IronDoc\Plainion.IronDoc.fsproj">

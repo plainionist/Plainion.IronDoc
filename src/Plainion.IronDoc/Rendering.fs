@@ -19,53 +19,59 @@ let substringAfter ( value : string ) ( sep : char ) =
 let normalizeSpace (value : string) =
     Regex.Replace(value.Trim(), @"\s+", " ")
 
-let tryProcessSeeAlso ctx (e:XElement) =
-    if e <> null then
-        ctx.Writer.WriteLine ()
-        ctx.Writer.WriteLine "> *See also: "
-        ctx.Writer.WriteLine ( e.Attribute(!!"cref").Value.ToString() )
+let processSeeAlso ctx (cref:string) =
+    ctx.Writer.WriteLine ()
+    ctx.Writer.WriteLine "> *See also: "
+    ctx.Writer.WriteLine cref
 
-let tryProcessSee ctx (e:XElement) =
-    if e <> null then
-        ctx.Writer.WriteLine ()
-        ctx.Writer.Write "> *See: "
-        ctx.Writer.Write ( e.Attribute(!!"cref").Value )
-        ctx.Writer.WriteLine "*"
+let processSee ctx (cref:string) =
+    ctx.Writer.WriteLine ()
+    ctx.Writer.Write "> *See: "
+    ctx.Writer.Write cref
+    ctx.Writer.WriteLine "*"
 
-let tryProcessPermission ctx (e:XElement) =
-    if e <> null then
-        ctx.Writer.WriteLine ()
-        ctx.Writer.Write "**Permission:** *"
-        ctx.Writer.Write ( e.Attribute(!!"cref").Value )
-        ctx.Writer.WriteLine "*"
-        ctx.Writer.WriteLine (normalizeSpace e.Value )
+let processPermission ctx (e:XElement) =
+    ctx.Writer.WriteLine ()
+    ctx.Writer.Write "**Permission:** *"
+    ctx.Writer.Write ( e.Attribute(!!"cref").Value )
+    ctx.Writer.WriteLine "*"
+    ctx.Writer.WriteLine (normalizeSpace e.Value )
 
-let tryProcessParameterRef ctx (e:XElement) =
-    if e <> null then
-        ctx.Writer.WriteLine "*"
-        ctx.Writer.Write ( e.Attribute(!!"name").Value )
-        ctx.Writer.WriteLine "*"
+let processParameterRef ctx (name:string) =
+    ctx.Writer.Write " *"
+    ctx.Writer.Write name
+    ctx.Writer.Write "* "
 
-let tryProcessInclude ctx (e:XElement) =
-    if e <> null then
-        ctx.Writer.Write "[External file]({"
-        ctx.Writer.Write ( e.Attribute(!!"file").Value)
-        ctx.Writer.WriteLine "})"
+let processTypeParameterRef ctx (name:string) =
+    ctx.Writer.Write " _"
+    ctx.Writer.Write name
+    ctx.Writer.Write "_ "
 
-let tryProcessCode ctx (e:XElement) =
-    if e <> null then
-        ctx.Writer.WriteLine()
-        ctx.Writer.Write "`"
-        ctx.Writer.Write e.Value
-        ctx.Writer.WriteLine "`"
+let processInclude ctx (e:XElement) =
+    ctx.Writer.Write "[External file]({"
+    ctx.Writer.Write ( e.Attribute(!!"file").Value)
+    ctx.Writer.WriteLine "})"
 
-let tryProcessC ctx (e:XElement) =
-    if e <> null then
-        ctx.Writer.WriteLine ()
-        ctx.Writer.WriteLine "```"
-        ctx.Writer.WriteLine ()
-        ctx.Writer.WriteLine ( normalizeSpace e.Value )
-        ctx.Writer.WriteLine "```"
+let processC ctx (str:string) =
+    ctx.Writer.Write "`"
+    ctx.Writer.Write str
+    ctx.Writer.Write "`"
+
+let processCode ctx str =
+    ctx.Writer.WriteLine ()
+    ctx.Writer.WriteLine "```"
+    ctx.Writer.WriteLine ()
+    ctx.Writer.WriteLine ( normalizeSpace str )
+    ctx.Writer.WriteLine "```"
+
+let processPara ctx (str:string) =
+    ctx.Writer.WriteLine()
+    ctx.Writer.WriteLine()
+    ctx.Writer.WriteLine str
+    ctx.Writer.WriteLine()
+
+let processIfNotNull ctx (e:XElement) f =
+    if e <> null then f ctx e
 
 let processXml ctx (memb :XElement) (level :int) = 
     memb.Elements(!!"summary")
@@ -142,20 +148,36 @@ let processXml ctx (memb :XElement) (level :int) =
         ctx.Writer.WriteLine ">"
             
         memb.Elements(!!"example")
-        |> Seq.iter( fun e -> tryProcessC ctx e )
+        |> Seq.iter( fun e -> if e <> null then processC ctx e.Value )
 
-    tryProcessC ctx (memb.Element(!!"c"))
-    tryProcessCode ctx (memb.Element(!!"code"))
-    tryProcessInclude ctx (memb.Element(!!"include"))
-    tryProcessParameterRef ctx (memb.Element(!!"paramref"))
-    tryProcessPermission ctx (memb.Element(!!"permission"))
-    tryProcessSee ctx (memb.Element(!!"see"))
-    tryProcessSeeAlso ctx (memb.Element(!!"seealso"))
+    let tryXml name = processIfNotNull ctx (memb.Element(name))
+
+    tryXml !!"c" (fun ctx e -> processC ctx e.Value )
+    tryXml !!"code" (fun ctx e -> processCode ctx e.Value )
+    tryXml !!"paramref" (fun ctx e -> processParameterRef ctx (e.Attribute(!!"name").Value) )
+    tryXml !!"see" (fun ctx e -> processSee ctx (e.Attribute(!!"cref").Value) )
+    tryXml !!"seealso" (fun ctx e -> processSeeAlso ctx (e.Attribute(!!"cref").Value) )
+    
+let processInline ctx inl =
+    match inl with
+    | Text x -> ctx.Writer.WriteLine(normalizeSpace x )  
+    | C x -> processC ctx x  
+    | Code x -> processCode ctx x  
+    | Para x -> processPara ctx x  
+    | ParamRef x -> let (CRef cref) = x  
+                    processParameterRef ctx cref
+    | TypeParamRef x -> let (CRef cref) = x  
+                        processTypeParameterRef ctx cref
+    | See x -> let (CRef cref) = x  
+               processSee ctx cref
+    | SeeAlso x -> let (CRef cref) = x  
+                   processSeeAlso ctx cref
 
 let tryProcessMemberDoc ctx memDoc level = 
     match memDoc with
     | None -> ()
     | Some doc -> processXml ctx doc.Xml level
+                  doc.Summary |> Seq.iter( fun i -> processInline ctx i )
                   
 let processMember ctx memb ( getMemberName : _ -> string) =
     ctx.Writer.WriteLine()

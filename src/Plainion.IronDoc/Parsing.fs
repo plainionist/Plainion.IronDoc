@@ -146,7 +146,7 @@ let getMemberElementName (mi : MemberInfo) =
 type XmlDocDocument = { AssemblyName : string
                         Members : XElement list } 
 
-// ignored: <include/> <list/> <permission/>
+// ignored:  <list/> 
 let GetXmlDocumentation xmlDoc memberInfo = 
     let memberName = getMemberElementName memberInfo
     let doc = xmlDoc.Members |> Seq.tryFind (fun m -> m.Attribute(!!"name").Value = memberName)

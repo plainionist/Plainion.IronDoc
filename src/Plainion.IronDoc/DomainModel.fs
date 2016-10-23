@@ -3,10 +3,15 @@ module Plainion.IronDoc.FSharp.DomainModel
 
 open System.Xml.Linq
 
-type CRef = string
+type CRef = CRef of string
+type File = File of string
+type Path = Path of string
 
 type CRefDescription = { cref : CRef 
                          description : string } 
+
+
+// https://msdn.microsoft.com/en-us/library/5ast78ax.aspx
 
 type Inline =
     | Text of string
@@ -26,4 +31,6 @@ type MemberDoc = { Xml : XElement
 //    | Exception of CRefDescription
 //    | Param of CRefDescription
 //    | TypeParam of CRefDescription
+//    | Permission of CRefDescription
 //    | Value of Inline list
+//    | Include of (File * Path)
