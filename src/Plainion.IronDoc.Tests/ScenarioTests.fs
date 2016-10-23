@@ -23,8 +23,7 @@ type internal OverwrittenMethods() =
 /// </remarks>
 type internal SimplePublicClass() = class end
 
-// contains tests for specific parsing scenarios
-// TODO: actually no rendering required here
+// test specific scenarios - parsing + rendering
 [<TestFixture>]
 module ParsingTests =
     
@@ -48,16 +47,19 @@ module ParsingTests =
     let ``Simple class summary rendered`` () = 
         let markdownDocument = transform typedefof<SimplePublicClass>
 
+        // TODO: to unspecific
         Assert.That( markdownDocument, Does.Contain "This is a summary" )
 
     [<Test>]
     let ``Overwritten method is rendered``() =
         let markdownDocument = transform typedefof<OverwrittenMethods>
 
+        // TODO: to unspecific
         Assert.That( markdownDocument, Does.Contain @"Returns nicely formatted message about the state of this object" )
 
     [<Test>]
     let ``Nested type summary is rendered``() =
         let markdownDocument = transform typedefof<NestedType.Nested>
 
+        // TODO: to unspecific
         Assert.That( markdownDocument, Does.Contain @"I am nested" )
