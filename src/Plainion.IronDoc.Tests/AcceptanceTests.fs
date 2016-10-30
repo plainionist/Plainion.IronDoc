@@ -9,6 +9,7 @@ open Plainion.IronDoc.Tests.Fakes.Acceptance
 // contains tests for specific parsing scenarios
 [<TestFixture>]
 module AcceptanceTests =
+    open Plainion.IronDoc.Parsing
     
     let getApiDoc assemblyLocation =
         let docFile = Path.Combine( Path.GetDirectoryName( assemblyLocation ), Path.GetFileNameWithoutExtension( assemblyLocation ) + ".xml" )
@@ -30,7 +31,7 @@ module AcceptanceTests =
     let transform ( t : Type ) =
         use writer = new StringWriter()
         
-        Rendering.TransformType t myApiDoc writer
+        Workflows.TransformType t myApiDoc writer
         
         writer.ToString()
 

@@ -46,8 +46,10 @@
     <Conent Include="MsBuild\Plainion.IronDoc.targets" />
     <Compile Include="Core.fs" />
     <Compile Include="DomainModel.fs" />
-    <Compile Include="Parsing.fs" />
+    <Compile Include="Parsing.Reflection.fs" />
+    <Compile Include="Parsing.XmlDoc.fs" />
     <Compile Include="Rendering.fs" />
+    <Compile Include="Workflows.fs" />
     <Compile Include="MsBuild.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />

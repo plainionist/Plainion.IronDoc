@@ -1,4 +1,5 @@
-﻿[<AutoOpen>]
+﻿// DomainModel only
+[<AutoOpen>]
 module Plainion.IronDoc.DomainModel
 
 open System.Xml.Linq

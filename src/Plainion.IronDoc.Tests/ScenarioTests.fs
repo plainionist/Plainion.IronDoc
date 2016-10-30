@@ -26,6 +26,7 @@ type internal SimplePublicClass() = class end
 // test specific scenarios - parsing + rendering
 [<TestFixture>]
 module ParsingTests =
+    open Plainion.IronDoc.Parsing
     
     let getApiDoc assemblyLocation =
         let docFile = Path.Combine( Path.GetDirectoryName( assemblyLocation ), Path.GetFileNameWithoutExtension( assemblyLocation ) + ".xml" )
@@ -39,7 +40,7 @@ module ParsingTests =
         use writer = new StringWriter()
         
         let apiDoc = getApiDocCached t.Assembly.Location
-        Rendering.TransformType t apiDoc writer
+        Workflows.TransformType t apiDoc writer
         
         writer.ToString();
 

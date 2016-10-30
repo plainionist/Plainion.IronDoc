@@ -1,4 +1,5 @@
-﻿[<AutoOpen>]
+﻿// extensions to .Net
+[<AutoOpen>]
 module internal Plainion.IronDoc.Core
 
 open System

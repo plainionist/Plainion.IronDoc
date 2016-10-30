@@ -1,4 +1,5 @@
-﻿module Plainion.IronDoc.Program
+﻿// command line interface to Api doc processor
+module Plainion.IronDoc.Program
 
 open System
 open System.IO
@@ -72,6 +73,6 @@ let main argv =
     | Some x ->
         printf "Generating documentation to: %s" x.output
 
-        Rendering.TransformFile x.assembly x.output
+        Workflows.TransformFile x.assembly x.output
 
         0

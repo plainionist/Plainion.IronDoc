@@ -7,6 +7,9 @@ open Microsoft.Build.Framework
 open Microsoft.Build.Utilities
 open Plainion.IronDoc
 
+/// <summary>
+/// MsBuild task to generate API documentation
+/// </summary>
 type IronDoc() =
     inherit Task()
 
@@ -20,7 +23,7 @@ type IronDoc() =
         this.Log.LogMessage( MessageImportance.Normal, "IronDoc generation started" )
 
         try
-            Rendering.TransformFile this.Assembly this.Output 
+            Workflows.TransformFile this.Assembly this.Output 
 
             this.Log.LogMessage( MessageImportance.Normal, "IronDoc generation Finished. Output written to: {0}", this.Output )
 
