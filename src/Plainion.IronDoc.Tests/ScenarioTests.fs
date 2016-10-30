@@ -4,7 +4,7 @@ open System
 open System.IO
 open System.Collections.Generic
 open NUnit.Framework
-open Plainion.IronDoc.FSharp
+open Plainion.IronDoc
 open Plainion.IronDoc.Tests.Fakes
 open Plainion.IronDoc.Tests.Fakes
 
@@ -59,7 +59,7 @@ module ParsingTests =
 
     [<Test>]
     let ``Nested type summary is rendered``() =
-        let markdownDocument = transform typedefof<NestedType.Nested>
+        let markdownDocument = transform typedefof<Scenarios.NestedType.Nested>
 
         // TODO: to unspecific
         Assert.That( markdownDocument, Does.Contain @"I am nested" )

@@ -1,4 +1,4 @@
-﻿module Plainion.IronDoc.FSharp.Rendering
+﻿module Plainion.IronDoc.Rendering
 
 open System
 open System.IO

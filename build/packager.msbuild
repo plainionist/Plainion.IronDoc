@@ -11,10 +11,6 @@
         <NugetBuild Include="$(OutputPath)\Plainion.IronDoc.exe"/>
         <NugetBuild Include="$(OutputPath)\Plainion.IronDoc.exe.config"/>
         <NugetBuild Include="$(OutputPath)\Plainion.IronDoc.pdb"/>
-
-        <NugetBuild Include="$(OutputPath)\Plainion.IronDoc.FSharp.dll"/>
-        <NugetBuild Include="$(OutputPath)\Plainion.IronDoc.FSharp.xml"/>
-        <NugetBuild Include="$(OutputPath)\Plainion.IronDoc.FSharp.pdb"/>
     </ItemGroup>
 
     <ItemGroup Condition=" '$(Package)' == 'IronDoc.AfterBuild' ">

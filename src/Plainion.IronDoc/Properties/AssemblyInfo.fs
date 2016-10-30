@@ -1,4 +1,4 @@
-﻿namespace Plainion.IronDoc.FSharp
+﻿namespace Plainion.IronDoc
 
 module AssemblyInfo' =
 

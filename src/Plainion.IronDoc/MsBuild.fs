@@ -1,11 +1,11 @@
-﻿namespace Plainion.IronDoc.FSharp.MsBuild
+﻿namespace Plainion.IronDoc.MsBuild
 
 open System
 open System.Linq
 open System.Reflection
 open Microsoft.Build.Framework
 open Microsoft.Build.Utilities
-open Plainion.IronDoc.FSharp
+open Plainion.IronDoc
 
 type IronDoc() =
     inherit Task()

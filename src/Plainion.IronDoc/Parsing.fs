@@ -1,5 +1,5 @@
 ﻿[<AutoOpen>]
-module Plainion.IronDoc.FSharp.Parsing
+module Plainion.IronDoc.Parsing
 
 open System
 open System.Collections.Generic
@@ -9,7 +9,7 @@ open System.Linq
 open System.Text.RegularExpressions
 open System.Reflection
 open System.Xml.Linq
-open Plainion.IronDoc.FSharp
+open Plainion.IronDoc
 
 let reflectionOnlyLoad assemblyFile =
     // Load assembly from byte[] to avoid getting the file locked by our process

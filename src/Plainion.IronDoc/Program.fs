@@ -2,7 +2,7 @@
 
 open System
 open System.IO
-open Plainion.IronDoc.FSharp
+open Plainion.IronDoc
 
 let usage() =
     printf "Plainion.IronDoc [Options]"

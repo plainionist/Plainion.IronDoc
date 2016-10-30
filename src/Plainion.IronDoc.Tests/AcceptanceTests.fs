@@ -2,23 +2,9 @@
 
 open System
 open System.IO
-open System.Collections.Generic
 open NUnit.Framework
-open Plainion.IronDoc.FSharp
-open Plainion.IronDoc.Tests.Fakes
-open Plainion.IronDoc.Tests.Fakes
-
-/// <summary>
-/// This is use case number one
-/// <para>a dedicated paragraph</para>
-/// </summary>
-/// <remarks>
-/// And here are some remarks
-/// </remarks>
-type internal UseCase1() =
-
-    member this.Run () =
-        ()
+open Plainion.IronDoc
+open Plainion.IronDoc.Tests.Fakes.Acceptance
 
 // contains tests for specific parsing scenarios
 [<TestFixture>]
@@ -29,20 +15,44 @@ module AcceptanceTests =
 
         LoadApiDocFile docFile 
 
-    let getApiDocCached = 
-        memoize ( fun t -> getApiDoc t )
+    let myAssemblyLocation = typedefof<UseCase1>.Assembly.Location
+
+    let myApiDoc = getApiDoc myAssemblyLocation
+
+    let expected (t:Type) =
+        let root = Path.GetDirectoryName( myAssemblyLocation )
+        let assemblyName = Path.GetFileNameWithoutExtension( myAssemblyLocation )
+        let subFolders = t.Namespace.Substring(assemblyName.Length).Split('.') 
+                         |> Path.Combine
+        
+        File.ReadAllText( Path.Combine(root,subFolders, t.Name + ".md"))
        
     let transform ( t : Type ) =
         use writer = new StringWriter()
         
-        let apiDoc = getApiDocCached t.Assembly.Location
-        Rendering.TransformType t apiDoc writer
+        Rendering.TransformType t myApiDoc writer
         
-        writer.ToString();
+        writer.ToString()
+
+    let verifyLineBased (actual:string) (expected:string) =
+        let rec diff (actual:string list) (expected:string list) =
+            match actual,expected with
+            | ha::ta, he::te -> Assert.AreEqual(he, ha)
+                                diff ta te
+            | [], [] -> ()
+            | ha::ta,[] -> Assert.Fail( sprintf "Actual is longer than expected: %A" actual ) 
+            | [],he::te -> Assert.Fail( sprintf "Expected is longer than actual: %A" expected ) 
+        
+        let splitLines (s:string) =
+            s.Split([|Environment.NewLine|], StringSplitOptions.None) |> List.ofArray
+
+        diff (splitLines actual) (splitLines expected)
 
     [<Test>]
     let ``Standard API documentation tags are rendered nicely`` () = 
-        let markdownDocument = transform typedefof<UseCase1>
+        let typeToTest = typedefof<UseCase1>
 
-        Assert.That( markdownDocument, Does.Contain "This is a summary" )
+        let markdownDocument = transform typeToTest
+
+        verifyLineBased markdownDocument (expected typeToTest)
 

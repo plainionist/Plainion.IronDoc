@@ -1,5 +1,5 @@
 ﻿
-namespace Plainion.IronDoc.Tests.Fakes
+namespace Plainion.IronDoc.Tests.Fakes.Scenarios
 {
     public class NestedType
     {

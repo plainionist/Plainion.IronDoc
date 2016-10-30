@@ -1,5 +1,5 @@
 ﻿[<AutoOpen>]
-module Plainion.IronDoc.FSharp.DomainModel
+module Plainion.IronDoc.DomainModel
 
 open System.Xml.Linq
 
