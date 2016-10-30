@@ -18,3 +18,6 @@ type internal Guard( on, off ) =
     interface IDisposable with
         member x.Dispose() = 
             off()
+
+let (|InvariantEqual|_|) (str:string) arg = 
+  if String.Compare(str, arg, StringComparison.OrdinalIgnoreCase) = 0 then Some() else None

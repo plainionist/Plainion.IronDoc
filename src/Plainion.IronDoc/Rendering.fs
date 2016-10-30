@@ -66,7 +66,6 @@ let processCode ctx str =
 
 let processPara ctx (str:string) =
     ctx.Writer.WriteLine()
-    ctx.Writer.WriteLine()
     ctx.Writer.WriteLine str
     ctx.Writer.WriteLine()
 
@@ -74,14 +73,6 @@ let processIfNotNull ctx (e:XElement) f =
     if e <> null then f ctx e
 
 let processXml ctx (memb :XElement) (level :int) = 
-    memb.Elements(!!"summary")
-    |> Seq.iter( fun s -> 
-        ctx.Writer.WriteLine(normalizeSpace s.Value )
-
-        memb.Elements(!!"para")
-        |> Seq.iter( fun p -> ctx.Writer.WriteLine(normalizeSpace p.Value))
-    )
-
     let headlineMarker = "#".PadLeft((level + 1), '#')
 
     if memb.Elements(!!"remarks").Any() then
@@ -90,7 +81,6 @@ let processXml ctx (memb :XElement) (level :int) =
 
         memb.Elements(!!"remarks")
         |> Seq.iter( fun r -> 
-            ctx.Writer.WriteLine ()
             ctx.Writer.Write "> "
             ctx.Writer.WriteLine (normalizeSpace r.Value )
         )
@@ -176,8 +166,8 @@ let processInline ctx inl =
 let tryProcessMemberDoc ctx memDoc level = 
     match memDoc with
     | None -> ()
-    | Some doc -> processXml ctx doc.Xml level
-                  doc.Summary |> Seq.iter( fun i -> processInline ctx i )
+    | Some doc -> doc.Summary |> Seq.iter( fun i -> processInline ctx i )
+                  processXml ctx doc.Xml level
                   
 let processMember ctx memb ( getMemberName : _ -> string) =
     ctx.Writer.WriteLine()

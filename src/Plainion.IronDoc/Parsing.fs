@@ -10,6 +10,7 @@ open System.Text.RegularExpressions
 open System.Reflection
 open System.Xml.Linq
 open Plainion.IronDoc
+open System.Xml
 
 let reflectionOnlyLoad assemblyFile =
     // Load assembly from byte[] to avoid getting the file locked by our process
@@ -146,13 +147,38 @@ let getMemberElementName (mi : MemberInfo) =
 type XmlDocDocument = { AssemblyName : string
                         Members : XElement list } 
 
+let parseNode (node:XNode) =
+    match node with
+    | :? XText as txt -> Some ( Text (txt.Value.Trim() ) )
+    | :? XElement as e -> Some(match e.Name.LocalName with
+                               | InvariantEqual "c" -> C e.Value
+                               | InvariantEqual "code" -> Code e.Value
+                               | InvariantEqual "para" -> Para e.Value
+                               | InvariantEqual "ParamRef" -> ParamRef (CRef (e.Attribute(!!"cref").Value))
+                               | InvariantEqual "TypeParamRef" -> TypeParamRef (CRef (e.Attribute(!!"cref").Value))
+                               | InvariantEqual "See" -> See (CRef (e.Attribute(!!"cref").Value))
+                               | InvariantEqual "SeeAlso" -> SeeAlso (CRef (e.Attribute(!!"cref").Value))
+                               | x -> failwithf "Failed to parse: %s" x
+                               )
+    | _ -> None
+
+let parseElement (element:XElement) =
+    element.Nodes()
+    |> Seq.choose parseNode
+    |> List.ofSeq
+
+let parse (elements:XElement seq) =
+    elements
+    |> Seq.collect parseElement
+    |> List.ofSeq
+
 // ignored:  <list/> 
 let GetXmlDocumentation xmlDoc memberInfo = 
     let memberName = getMemberElementName memberInfo
     let doc = xmlDoc.Members |> Seq.tryFind (fun m -> m.Attribute(!!"name").Value = memberName)
     match doc with
     | Some d -> Some { Xml = d
-                       Summary = [] }
+                       Summary = (parse (d.Elements(!!"summary"))) }
     | None -> None
 
 let LoadApiDoc (root : XElement) = 

@@ -1,6 +1,6 @@
 ﻿
 ## Plainion.IronDoc.Tests.Fakes.Acceptance.UseCase1
-This is use case number one. 
+This is use case number one.
 
 A dedicated paragraph
 
