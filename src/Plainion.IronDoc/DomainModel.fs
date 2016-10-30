@@ -42,7 +42,21 @@ let NoDoc = { Summary = []
               Example = []
               Permissions = []
               TypeParams = []
-             }
+            }
+
+// TODO: member is one of the .net member types - it needs
+//       - syntax (name, return types, parameters) ... depending on member type
+//       - doc id 
+//       - and api doc itself ?? or would that be a different type ??
+
+type M = 
+    | Type of string
+    | Field
+    | Constructor
+    | Property
+    | Event
+    | Method
+    | NestedType
 
 type Member = { Assembly : string
                 Namespace : string
