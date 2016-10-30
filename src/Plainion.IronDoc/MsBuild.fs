@@ -23,7 +23,7 @@ type IronDoc() =
         this.Log.LogMessage( MessageImportance.Normal, "IronDoc generation started" )
 
         try
-            Workflows.TransformFile this.Assembly this.Output 
+            Workflows.transformFile this.Assembly this.Output 
 
             this.Log.LogMessage( MessageImportance.Normal, "IronDoc generation Finished. Output written to: {0}", this.Output )
 

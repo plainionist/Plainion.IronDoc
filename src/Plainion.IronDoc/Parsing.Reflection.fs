@@ -3,15 +3,10 @@
 module Plainion.IronDoc.Parsing.Reflection
 
 open System
-open System.Collections.Generic
-open System.Diagnostics
 open System.IO
-open System.Linq
-open System.Text.RegularExpressions
 open System.Reflection
-open System.Xml.Linq
+open System.Diagnostics
 open Plainion.IronDoc
-open System.Xml
 
 let reflectionOnlyLoad assemblyFile =
     // Load assembly from byte[] to avoid getting the file locked by our process
@@ -108,40 +103,4 @@ let assemblyLoader =
         loop [ AppDomain.CurrentDomain.BaseDirectory ] ) 
     { Load = fun assembly -> agent.PostAndReply( fun replyChannel -> LoadAssembly( assembly, replyChannel ) )
       Stop = fun () -> agent.Post Stop }
-
-let getMemberName (memberInfo : MemberInfo) = 
-    match memberInfo.MemberType with
-    | MemberTypes.Constructor -> "#ctor" // XML documentation uses slightly different constructor names
-    | MemberTypes.NestedType -> memberInfo.DeclaringType.Name + "." + memberInfo.Name
-    | _ -> memberInfo.Name
-    
-let getFullMemberName (memberInfo : MemberInfo) = 
-    match memberInfo with
-    | :? Type as t -> t.Namespace + "." + (getMemberName memberInfo) // member is a Type
-    | _ -> memberInfo.DeclaringType.FullName + "." + (getMemberName memberInfo)
-    
-/// elements are of the form "M:Namespace.Class.Method"
-let getMemberId prefixCode memberName = sprintf "%s:%s" prefixCode memberName
-    
-/// parameters are listed according to their type, not their name
-let getMethodParameterSignature (memberInfo : MemberInfo) = 
-    let parameters = (memberInfo :?> MethodBase).GetParameters()
-    match parameters with
-    | [||] -> ""
-    | _ -> 
-        "(" + (parameters
-                |> Seq.map (fun p -> p.ParameterType.FullName)
-                |> String.concat ",")
-        + ")"
-    
-let getMemberElementName (mi : MemberInfo) = 
-    match mi.MemberType with
-    | MemberTypes.Constructor -> getMemberId "M" (getFullMemberName mi + getMethodParameterSignature mi)
-    | MemberTypes.Method -> getMemberId "M" (getFullMemberName mi + getMethodParameterSignature mi)
-    | MemberTypes.Event -> getMemberId "E" (getFullMemberName mi)
-    | MemberTypes.Field -> getMemberId "F" (getFullMemberName mi)
-    | MemberTypes.NestedType -> getMemberId "T" (getFullMemberName mi)
-    | MemberTypes.TypeInfo -> getMemberId "T" (getFullMemberName mi)
-    | MemberTypes.Property -> getMemberId "P" (getFullMemberName mi)
-    | _ -> failwith "Unknown MemberType: " + mi.MemberType.ToString()
 

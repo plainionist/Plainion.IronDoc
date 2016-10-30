@@ -228,7 +228,7 @@ let processType (ctx : TransformationContext) (t : Type) =
     let mt = { Assembly = t.Assembly.FullName
                Namespace = t.Namespace
                Name = t.Name
-               Doc = GetXmlDocumentation ctx.Doc t }
+               Doc = getXmlDocumentation ctx.Doc t }
     processMemberDoc ctx mt 2
 
     let bindingFlags = BindingFlags.Instance ||| BindingFlags.Static ||| BindingFlags.Public ||| BindingFlags.DeclaredOnly
@@ -241,7 +241,7 @@ let processType (ctx : TransformationContext) (t : Type) =
           |> Seq.map(fun x -> { Assembly = mt.Assembly
                                 Namespace = mt.Namespace
                                 Name = x.FieldType.FullName + " " + x.Name
-                                Doc = GetXmlDocumentation ctx.Doc x } ) )
+                                Doc = getXmlDocumentation ctx.Doc x } ) )
 
     processMembers
         ctx 
@@ -251,7 +251,7 @@ let processType (ctx : TransformationContext) (t : Type) =
           |> Seq.map(fun x -> { Assembly = mt.Assembly
                                 Namespace = mt.Namespace
                                 Name = getMemberName x
-                                Doc = GetXmlDocumentation ctx.Doc x } ) )
+                                Doc = getXmlDocumentation ctx.Doc x } ) )
 
     processMembers
         ctx 
@@ -261,7 +261,7 @@ let processType (ctx : TransformationContext) (t : Type) =
           |> Seq.map(fun x -> { Assembly = mt.Assembly
                                 Namespace = mt.Namespace
                                 Name = x.PropertyType.FullName + " " + x.Name
-                                Doc = GetXmlDocumentation ctx.Doc x } ) )
+                                Doc = getXmlDocumentation ctx.Doc x } ) )
     
     processMembers
         ctx 
@@ -271,7 +271,7 @@ let processType (ctx : TransformationContext) (t : Type) =
           |> Seq.map(fun x -> { Assembly = mt.Assembly
                                 Namespace = mt.Namespace
                                 Name = x.EventHandlerType.FullName + " " + x.Name
-                                Doc = GetXmlDocumentation ctx.Doc x } ) )
+                                Doc = getXmlDocumentation ctx.Doc x } ) )
 
     processMembers
         ctx 
@@ -281,6 +281,6 @@ let processType (ctx : TransformationContext) (t : Type) =
           |> Seq.map(fun x -> { Assembly = mt.Assembly
                                 Namespace = mt.Namespace
                                 Name = getMemberName x
-                                Doc = GetXmlDocumentation ctx.Doc x } ) )
+                                Doc = getXmlDocumentation ctx.Doc x } ) )
 
 

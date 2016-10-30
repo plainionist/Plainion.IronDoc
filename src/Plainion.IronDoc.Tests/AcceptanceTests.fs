@@ -14,7 +14,7 @@ module AcceptanceTests =
     let getApiDoc assemblyLocation =
         let docFile = Path.Combine( Path.GetDirectoryName( assemblyLocation ), Path.GetFileNameWithoutExtension( assemblyLocation ) + ".xml" )
 
-        LoadApiDocFile docFile 
+        loadApiDocFile docFile 
 
     let myAssemblyLocation = typedefof<UseCase1>.Assembly.Location
 
@@ -31,7 +31,7 @@ module AcceptanceTests =
     let transform ( t : Type ) =
         use writer = new StringWriter()
         
-        Workflows.TransformType t myApiDoc writer
+        Workflows.transformType t myApiDoc writer
         
         writer.ToString()
 

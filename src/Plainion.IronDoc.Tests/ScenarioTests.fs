@@ -31,7 +31,7 @@ module ParsingTests =
     let getApiDoc assemblyLocation =
         let docFile = Path.Combine( Path.GetDirectoryName( assemblyLocation ), Path.GetFileNameWithoutExtension( assemblyLocation ) + ".xml" )
 
-        LoadApiDocFile docFile 
+        loadApiDocFile docFile 
 
     let getApiDocCached = 
         memoize ( fun t -> getApiDoc t )
@@ -40,7 +40,7 @@ module ParsingTests =
         use writer = new StringWriter()
         
         let apiDoc = getApiDocCached t.Assembly.Location
-        Workflows.TransformType t apiDoc writer
+        Workflows.transformType t apiDoc writer
         
         writer.ToString();
 

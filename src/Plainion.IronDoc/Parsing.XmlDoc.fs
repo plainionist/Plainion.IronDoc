@@ -3,46 +3,79 @@
 module Plainion.IronDoc.Parsing.XmlDoc
 
 open System
-open System.Collections.Generic
-open System.Diagnostics
-open System.IO
-open System.Linq
-open System.Text.RegularExpressions
 open System.Reflection
 open System.Xml.Linq
 open Plainion.IronDoc
-open System.Xml
+
+let getMemberName (memberInfo : MemberInfo) = 
+    match memberInfo.MemberType with
+    | MemberTypes.Constructor -> "#ctor" // XML documentation uses slightly different constructor names
+    | MemberTypes.NestedType -> memberInfo.DeclaringType.Name + "." + memberInfo.Name
+    | _ -> memberInfo.Name
+    
+let getFullMemberName (memberInfo : MemberInfo) = 
+    match memberInfo with
+    | :? Type as t -> t.Namespace + "." + (getMemberName memberInfo) // member is a Type
+    | _ -> memberInfo.DeclaringType.FullName + "." + (getMemberName memberInfo)
+    
+/// elements are of the form "M:Namespace.Class.Method"
+let getMemberId prefixCode memberName = 
+    sprintf "%s:%s" prefixCode memberName
+    
+/// parameters are listed according to their type, not their name
+let getMethodParameterSignature (memberInfo : MemberInfo) = 
+    let parameters = (memberInfo :?> MethodBase).GetParameters()
+    match parameters with
+    | [||] -> ""
+    | _ -> 
+        "(" + (parameters
+                |> Seq.map (fun p -> p.ParameterType.FullName)
+                |> String.concat ",")
+        + ")"
+    
+let getMemberElementName (mi : MemberInfo) = 
+    match mi.MemberType with
+    | MemberTypes.Constructor -> getMemberId "M" (getFullMemberName mi + getMethodParameterSignature mi)
+    | MemberTypes.Method -> getMemberId "M" (getFullMemberName mi + getMethodParameterSignature mi)
+    | MemberTypes.Event -> getMemberId "E" (getFullMemberName mi)
+    | MemberTypes.Field -> getMemberId "F" (getFullMemberName mi)
+    | MemberTypes.NestedType -> getMemberId "T" (getFullMemberName mi)
+    | MemberTypes.TypeInfo -> getMemberId "T" (getFullMemberName mi)
+    | MemberTypes.Property -> getMemberId "P" (getFullMemberName mi)
+    | _ -> failwith "Unknown MemberType: " + mi.MemberType.ToString()
 
 type XmlDocDocument = { AssemblyName : string
                         Members : XElement list } 
 
-let parseNode (node:XNode) =
+let parseXElement (e:XElement) =
+    match e.Name.LocalName with
+    | InvariantEqual "c" -> C e.Value
+    | InvariantEqual "code" -> Code e.Value
+    | InvariantEqual "para" -> Para e.Value
+    | InvariantEqual "ParamRef" -> ParamRef (CRef (e.Attribute(!!"cref").Value))
+    | InvariantEqual "TypeParamRef" -> TypeParamRef (CRef (e.Attribute(!!"cref").Value))
+    | InvariantEqual "See" -> See (CRef (e.Attribute(!!"cref").Value))
+    | InvariantEqual "SeeAlso" -> SeeAlso (CRef (e.Attribute(!!"cref").Value))
+    | x -> failwithf "Failed to parse: %s" x
+
+let parseXNode (node:XNode) =
     match node with
     | :? XText as txt -> Some ( Text (txt.Value.Trim() ) )
-    | :? XElement as e -> Some(match e.Name.LocalName with
-                               | InvariantEqual "c" -> C e.Value
-                               | InvariantEqual "code" -> Code e.Value
-                               | InvariantEqual "para" -> Para e.Value
-                               | InvariantEqual "ParamRef" -> ParamRef (CRef (e.Attribute(!!"cref").Value))
-                               | InvariantEqual "TypeParamRef" -> TypeParamRef (CRef (e.Attribute(!!"cref").Value))
-                               | InvariantEqual "See" -> See (CRef (e.Attribute(!!"cref").Value))
-                               | InvariantEqual "SeeAlso" -> SeeAlso (CRef (e.Attribute(!!"cref").Value))
-                               | x -> failwithf "Failed to parse: %s" x
-                               )
+    | :? XElement as e -> Some( parseXElement e )
     | _ -> None
 
-let parseElement (element:XElement) =
-    element.Nodes()
-    |> Seq.choose parseNode
-    |> List.ofSeq
-
 let parse (elements:XElement seq) =
+    let parseMember (element:XElement) =
+        element.Nodes()
+        |> Seq.choose parseXNode
+        |> List.ofSeq
+
     elements
-    |> Seq.collect parseElement
+    |> Seq.collect parseMember
     |> List.ofSeq
 
 // ignored:  <list/> , <include/>, <value/>
-let GetXmlDocumentation xmlDoc memberInfo = 
+let getXmlDocumentation xmlDoc memberInfo = 
     let memberName = getMemberElementName memberInfo
     let doc = xmlDoc.Members |> Seq.tryFind (fun m -> m.Attribute(!!"name").Value = memberName)
     
@@ -74,10 +107,10 @@ let GetXmlDocumentation xmlDoc memberInfo =
                 }
     | None -> NoDoc
 
-let LoadApiDoc (root : XElement) = 
+let loadApiDoc (root : XElement) = 
     { XmlDocDocument.AssemblyName = root.Element(!!"assembly").Element(!!"name").Value
       XmlDocDocument.Members = root.Element(!!"members").Elements(!!"member") |> List.ofSeq }
     
-let LoadApiDocFile(file : string) = 
-    LoadApiDoc(XElement.Load file)
+let loadApiDocFile(file : string) = 
+    loadApiDoc(XElement.Load file)
 
