@@ -44,7 +44,7 @@
     </Compile>
     <Compile Include="Properties\AssemblyInfo.fs" />
     <Conent Include="MsBuild\Plainion.IronDoc.targets" />
-    <Compile Include="Interop.fs" />
+    <Compile Include="Core.fs" />
     <Compile Include="DomainModel.fs" />
     <Compile Include="Parsing.fs" />
     <Compile Include="Rendering.fs" />

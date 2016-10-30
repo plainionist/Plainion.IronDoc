@@ -12,174 +12,174 @@ type TransformationContext =
       Writer : TextWriter
       Doc : XmlDocDocument }
 
-let substringAfter ( value : string ) ( sep : char ) =
-    let pos = value.IndexOf (sep)
-    value.Substring(pos + 1)
+let processText txt =
+    normalizeSpace txt  
 
-let normalizeSpace (value : string) =
-    Regex.Replace(value.Trim(), @"\s+", " ")
+let nl = Environment.NewLine
 
-let processSeeAlso ctx (cref:string) =
-    ctx.Writer.WriteLine ()
-    ctx.Writer.WriteLine "> *See also: "
-    ctx.Writer.WriteLine cref
+let processSeeAlso (cref:string) =
+    sprintf "%s> *See also: %s" nl cref
 
-let processSee ctx (cref:string) =
-    ctx.Writer.WriteLine ()
-    ctx.Writer.Write "> *See: "
-    ctx.Writer.Write cref
-    ctx.Writer.WriteLine "*"
+let processSee (cref:string) =
+    sprintf "*See:* %s" cref
 
-let processPermission ctx (e:XElement) =
-    ctx.Writer.WriteLine ()
-    ctx.Writer.Write "**Permission:** *"
-    ctx.Writer.Write ( e.Attribute(!!"cref").Value )
-    ctx.Writer.WriteLine "*"
-    ctx.Writer.WriteLine (normalizeSpace e.Value )
+let processParameterRef (name:string) =
+    sprintf "*%s*" name
 
-let processParameterRef ctx (name:string) =
-    ctx.Writer.Write " *"
-    ctx.Writer.Write name
-    ctx.Writer.Write "* "
+let processTypeParameterRef (name:string) =
+    sprintf "_%s_" name
 
-let processTypeParameterRef ctx (name:string) =
-    ctx.Writer.Write " _"
-    ctx.Writer.Write name
-    ctx.Writer.Write "_ "
+let processC (str:string) =
+    sprintf "`%s`" str
 
-let processInclude ctx (e:XElement) =
-    ctx.Writer.Write "[External file]({"
-    ctx.Writer.Write ( e.Attribute(!!"file").Value)
-    ctx.Writer.WriteLine "})"
+let processCode str =
+    sprintf "%s```%s%s%s```%s" nl nl ( normalizeSpace str ) nl nl
 
-let processC ctx (str:string) =
-    ctx.Writer.Write "`"
-    ctx.Writer.Write str
-    ctx.Writer.Write "`"
-
-let processCode ctx str =
-    ctx.Writer.WriteLine ()
-    ctx.Writer.WriteLine "```"
-    ctx.Writer.WriteLine ()
-    ctx.Writer.WriteLine ( normalizeSpace str )
-    ctx.Writer.WriteLine "```"
-
-let processPara ctx (str:string) =
-    ctx.Writer.WriteLine()
-    ctx.Writer.WriteLine str
-    ctx.Writer.WriteLine()
+let processPara (str:string) =
+    sprintf "%s%s%s" nl str nl
 
 let processIfNotNull ctx (e:XElement) f =
     if e <> null then f ctx e
 
-let processXml ctx (memb :XElement) (level :int) = 
+let processInline inl =
+    match inl with
+    | Text x -> processText x
+    | C x -> processC x  
+    | Code x -> processCode x  
+    | Para x -> processPara x  
+    | ParamRef x -> let (CRef cref) = x  
+                    processParameterRef cref
+    | TypeParamRef x -> let (CRef cref) = x  
+                        processTypeParameterRef cref
+    | See x -> let (CRef cref) = x  
+               processSee cref
+    | SeeAlso x -> String.Empty // ignore here - will be processed later
+
+let processMemberDoc ctx (memb:Member) (level :int) = 
+    memb.Doc.Summary 
+    |> Seq.map processInline
+    |> Seq.iter ctx.Writer.WriteLine
+
+    // TODO: only for types unless we generate one file per member
+//    ctx.Writer.WriteLine("**Namespace:** {0}", memb.Namespace)
+//    ctx.Writer.WriteLine("**Assembly:** {0}", memb.Assembly)
+
     let headlineMarker = "#".PadLeft((level + 1), '#')
 
-    if memb.Elements(!!"remarks").Any() then
+    ctx.Writer.WriteLine ()
+    ctx.Writer.WriteLine (headlineMarker + " Syntax")
+
+    // TODO: write syntax again - later in several languages
+
+    if memb.Doc.Params.Length > 0 then
         ctx.Writer.WriteLine ()
-        ctx.Writer.WriteLine ("> " + headlineMarker + " Remarks")
+        ctx.Writer.WriteLine ( headlineMarker + "#" + " Parameters")
 
-        memb.Elements(!!"remarks")
-        |> Seq.iter( fun r -> 
-            ctx.Writer.Write "> "
-            ctx.Writer.WriteLine (normalizeSpace r.Value )
-        )
-
-    if memb.Elements(!!"param").Any() then
-        ctx.Writer.WriteLine ()
-        ctx.Writer.WriteLine ("> " + headlineMarker + " Parameters")
-
-        memb.Elements(!!"param")
+        memb.Doc.Params 
         |> Seq.iter( fun p -> 
             ctx.Writer.WriteLine ()
 
             ctx.Writer.Write "> **"
 
-            ctx.Writer.Write ( if p.Attribute(!!"name") <> null then "" else p.Attribute(!!"name").Value )
+            ctx.Writer.Write p.cref
 
             ctx.Writer.Write ":**  " 
-            ctx.Writer.Write ( normalizeSpace p.Value )
+            ctx.Writer.Write p.description
             ctx.Writer.WriteLine ()
         )
 
-    if memb.Elements(!!"returns").Any() then
+    if memb.Doc.Returns.Length > 0 then
         ctx.Writer.WriteLine ()
-        ctx.Writer.WriteLine ("> " + headlineMarker + " Return value")
+        ctx.Writer.WriteLine (headlineMarker + "#" + " Return value")
 
-        memb.Elements(!!"returns")
-        |> Seq.iter( fun r -> 
-            ctx.Writer.WriteLine ()
-            ctx.Writer.Write "> "
-            ctx.Writer.WriteLine (normalizeSpace r.Value );
-        )
+        memb.Doc.Returns 
+        |> Seq.map processInline
+        |> Seq.iter ctx.Writer.WriteLine
 
-    if memb.Elements(!!"exception").Any() then
+    if memb.Doc.Exceptions.Length > 0 then
         ctx.Writer.WriteLine();
         ctx.Writer.WriteLine("> " + headlineMarker + " Exceptions");
 
-        memb.Elements(!!"exception")
+        memb.Doc.Exceptions
         |> Seq.iter( fun ex -> 
             ctx.Writer.WriteLine ()
 
-            ctx.Writer.Write "> **"
+            ctx.Writer.Write "**"
 
-            let cref = substringAfter ( ex.Attribute(!!"cref").Value) ':' 
+            let (CRef crefValue) = ex.cref
+            let cref = substringAfter crefValue ':' 
             ctx.Writer.Write cref
 
-            ctx.Writer.Write ":**  "
-            ctx.Writer.Write ex.Value
+            ctx.Writer.WriteLine "**"
+            ctx.Writer.Write ex.description
             ctx.Writer.WriteLine ()
         )
 
-    if memb.Elements(!!"example").Any() then
+    if memb.Doc.Remarks.Length > 0 then
         ctx.Writer.WriteLine ()
-        ctx.Writer.WriteLine ("> " + headlineMarker + " Example")
+        ctx.Writer.WriteLine (headlineMarker + " Remarks")
+
+        memb.Doc.Remarks 
+        |> Seq.map processInline
+        |> Seq.iter ctx.Writer.WriteLine
+
+    if memb.Doc.Example.Length > 0 then
         ctx.Writer.WriteLine ()
-        ctx.Writer.WriteLine ">"
-            
-        memb.Elements(!!"example")
-        |> Seq.iter( fun e -> if e <> null then processC ctx e.Value )
+        ctx.Writer.WriteLine (headlineMarker + " Example")
 
-    let tryXml name = processIfNotNull ctx (memb.Element(name))
+        memb.Doc.Example 
+        |> Seq.map processInline
+        |> Seq.iter ctx.Writer.WriteLine
 
-    tryXml !!"c" (fun ctx e -> processC ctx e.Value )
-    tryXml !!"code" (fun ctx e -> processCode ctx e.Value )
-    tryXml !!"paramref" (fun ctx e -> processParameterRef ctx (e.Attribute(!!"name").Value) )
-    tryXml !!"see" (fun ctx e -> processSee ctx (e.Attribute(!!"cref").Value) )
-    tryXml !!"seealso" (fun ctx e -> processSeeAlso ctx (e.Attribute(!!"cref").Value) )
-    
-let processInline ctx inl =
-    match inl with
-    | Text x -> ctx.Writer.WriteLine(normalizeSpace x )  
-    | C x -> processC ctx x  
-    | Code x -> processCode ctx x  
-    | Para x -> processPara ctx x  
-    | ParamRef x -> let (CRef cref) = x  
-                    processParameterRef ctx cref
-    | TypeParamRef x -> let (CRef cref) = x  
-                        processTypeParameterRef ctx cref
-    | See x -> let (CRef cref) = x  
-               processSee ctx cref
-    | SeeAlso x -> let (CRef cref) = x  
-                   processSeeAlso ctx cref
+    if memb.Doc.Permissions.Length > 0 then
+        ctx.Writer.WriteLine();
+        ctx.Writer.WriteLine(headlineMarker + " Permissions");
 
-let tryProcessMemberDoc ctx memDoc level = 
-    match memDoc with
-    | None -> ()
-    | Some doc -> doc.Summary |> Seq.iter( fun i -> processInline ctx i )
-                  processXml ctx doc.Xml level
+        memb.Doc.Exceptions
+        |> Seq.iter( fun ex -> 
+            ctx.Writer.WriteLine ()
+
+            ctx.Writer.Write "**"
+
+            let (CRef crefValue) = ex.cref
+            let cref = substringAfter crefValue ':' 
+            ctx.Writer.Write cref
+
+            ctx.Writer.WriteLine "**"
+            ctx.Writer.Write ex.description
+            ctx.Writer.WriteLine ()
+        )
+
+    let seeAlso = [ memb.Doc.Summary
+                    memb.Doc.Remarks
+                    memb.Doc.Returns
+                    memb.Doc.Example
+                  ]
+                  |> Seq.concat
+                  |> Seq.choose(fun x -> match x with
+                                         | SeeAlso i -> Some i
+                                         | _ -> None  )
+                  |> Seq.distinct
+                  |> List.ofSeq
+
+    if seeAlso.Length > 0 then
+        ctx.Writer.WriteLine ()
+        ctx.Writer.WriteLine (headlineMarker + " See also")
+
+        seeAlso 
+        |> Seq.iter ctx.Writer.WriteLine
                   
-let processMember ctx memb ( getMemberName : _ -> string) =
+let processMember ctx m =
     ctx.Writer.WriteLine()
 
     ctx.Writer.Write "#### "
-    ctx.Writer.WriteLine ( getMemberName memb )
+    ctx.Writer.WriteLine m.Name
 
     ctx.Writer.WriteLine()
 
-    tryProcessMemberDoc ctx ( GetXmlDocumentation ctx.Doc memb ) 4
+    processMemberDoc ctx m 4
 
-let processMembers ctx ( headline : string ) allMembers getMemberName = 
+let processMembers ctx (headline : string) allMembers = 
     let members = allMembers |> List.ofSeq
         
     if not ( List.isEmpty members ) then
@@ -188,7 +188,7 @@ let processMembers ctx ( headline : string ) allMembers getMemberName =
         ctx.Writer.WriteLine headline
 
         members
-        |> Seq.iter ( fun m -> processMember ctx m getMemberName)
+        |> Seq.iter(fun m -> processMember ctx m)
 
 let getMethodSignatureWitoutReturnType (m:MethodBase) =
     let parameterSignature = 
@@ -212,44 +212,73 @@ let getMemberName (m:MemberInfo) =
     | :? MethodInfo as x -> getMethodSignature x
     | _ -> "not implemented"
 
+
+// TODO: separate parser from renderer further - take all required infos from reflection and put into "member descriptor" so that
+//       we do not have to handle any reflection in rendering process any longer
+
+
 let processType (ctx : TransformationContext) (t : Type) = 
     ctx.Writer.WriteLine()
     ctx.Writer.Write "## "
     ctx.Writer.WriteLine t.FullName
 
-    tryProcessMemberDoc ctx (GetXmlDocumentation ctx.Doc t) 2
+    let mt = { Assembly = t.Assembly.FullName
+               Namespace = t.Namespace
+               Name = t.Name
+               Doc = GetXmlDocumentation ctx.Doc t }
+    processMemberDoc ctx mt 2
 
     let bindingFlags = BindingFlags.Instance ||| BindingFlags.Static ||| BindingFlags.Public ||| BindingFlags.DeclaredOnly
 
     processMembers
         ctx 
         "Fields" 
-        (t.GetFields(bindingFlags) |> Seq.filter (fun m -> not m.IsPrivate)) 
-        (fun field  -> field.FieldType.FullName + " " + field.Name)
+        ( t.GetFields(bindingFlags) 
+          |> Seq.filter(fun m -> not m.IsPrivate)
+          |> Seq.map(fun x -> { Assembly = mt.Assembly
+                                Namespace = mt.Namespace
+                                Name = x.FieldType.FullName + " " + x.Name
+                                Doc = GetXmlDocumentation ctx.Doc x } ) )
 
     processMembers
-        ctx
-        "Constructors"
-        (t.GetConstructors(bindingFlags) |> Seq.filter( fun m -> not m.IsPrivate))
-        (fun m -> getMemberName m)
+        ctx 
+        "Constructors" 
+        ( t.GetConstructors(bindingFlags) 
+          |> Seq.filter(fun m -> not m.IsPrivate)
+          |> Seq.map(fun x -> { Assembly = mt.Assembly
+                                Namespace = mt.Namespace
+                                Name = getMemberName x
+                                Doc = GetXmlDocumentation ctx.Doc x } ) )
 
     processMembers
-        ctx
-        "Properties"
-        (t.GetProperties(bindingFlags) |> Seq.filter( fun m -> not m.GetMethod.IsPrivate))
-        ( fun property -> property.PropertyType.FullName + " " + property.Name )
+        ctx 
+        "Properties" 
+        ( t.GetProperties(bindingFlags) 
+          |> Seq.filter(fun m -> not m.GetMethod.IsPrivate)
+          |> Seq.map(fun x -> { Assembly = mt.Assembly
+                                Namespace = mt.Namespace
+                                Name = x.PropertyType.FullName + " " + x.Name
+                                Doc = GetXmlDocumentation ctx.Doc x } ) )
+    
+    processMembers
+        ctx 
+        "Events" 
+        ( t.GetEvents(bindingFlags) 
+          |> Seq.filter(fun m -> not m.AddMethod.IsPrivate)
+          |> Seq.map(fun x -> { Assembly = mt.Assembly
+                                Namespace = mt.Namespace
+                                Name = x.EventHandlerType.FullName + " " + x.Name
+                                Doc = GetXmlDocumentation ctx.Doc x } ) )
 
     processMembers
-        ctx
-        "Events"
-        (t.GetEvents(bindingFlags) |> Seq.filter( fun m -> not m.AddMethod.IsPrivate))
-        ( fun evt -> evt.EventHandlerType.FullName + " " + evt.Name)
-
-    processMembers
-        ctx
-        "Methods"
-        (t.GetMethods(bindingFlags) |> Seq.filter( fun m -> not m.IsSpecialName) |> Seq.filter( fun m -> not m.IsPrivate))
-        (fun m -> getMemberName m)
+        ctx 
+        "Methods" 
+        ( t.GetMethods(bindingFlags) 
+          |> Seq.filter(fun m -> not m.IsSpecialName && not m.IsPrivate)
+          |> Seq.map(fun x -> { Assembly = mt.Assembly
+                                Namespace = mt.Namespace
+                                Name = getMemberName x
+                                Doc = GetXmlDocumentation ctx.Doc x } ) )
 
 let TransformType t xmlDoc writer = 
     let ctx = 

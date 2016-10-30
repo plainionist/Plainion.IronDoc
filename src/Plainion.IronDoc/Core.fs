@@ -1,7 +1,8 @@
 ﻿[<AutoOpen>]
-module internal Plainion.IronDoc.Interop
+module internal Plainion.IronDoc.Core
 
 open System
+open System.Text.RegularExpressions
 open System.Xml.Linq
 
 /// Call "Implicit" operator
@@ -21,3 +22,11 @@ type internal Guard( on, off ) =
 
 let (|InvariantEqual|_|) (str:string) arg = 
   if String.Compare(str, arg, StringComparison.OrdinalIgnoreCase) = 0 then Some() else None
+
+let substringAfter ( value : string ) ( sep : char ) =
+    let pos = value.IndexOf (sep)
+    value.Substring(pos + 1)
+
+let normalizeSpace (value : string) =
+    Regex.Replace(value.Trim(), @"\s+", " ")
+

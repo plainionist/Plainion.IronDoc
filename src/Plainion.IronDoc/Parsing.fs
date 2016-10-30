@@ -172,14 +172,38 @@ let parse (elements:XElement seq) =
     |> Seq.collect parseElement
     |> List.ofSeq
 
-// ignored:  <list/> 
+// ignored:  <list/> , <include/>, <value/>
 let GetXmlDocumentation xmlDoc memberInfo = 
     let memberName = getMemberElementName memberInfo
     let doc = xmlDoc.Members |> Seq.tryFind (fun m -> m.Attribute(!!"name").Value = memberName)
+    
     match doc with
-    | Some d -> Some { Xml = d
-                       Summary = (parse (d.Elements(!!"summary"))) }
-    | None -> None
+    | Some d -> { Summary = (parse (d.Elements(!!"summary")))
+                  Remarks = (parse (d.Elements(!!"remarks")))
+                  Params = d.Elements(!!"param") 
+                           |> Seq.map(fun x -> { cref = CRef( x.Attribute(!!"name").Value )
+                                                 description = normalizeSpace x.Value
+                                               })
+                           |> List.ofSeq
+                  Returns = (parse (d.Elements(!!"returns")))
+                  Exceptions = d.Elements(!!"exception") 
+                               |> Seq.map(fun x -> { cref = CRef( x.Attribute(!!"cref").Value )
+                                                     description = normalizeSpace x.Value
+                                                })
+                               |> List.ofSeq
+                  Example = (parse (d.Elements(!!"example")))
+                  Permissions = d.Elements(!!"permission") 
+                                |> Seq.map(fun x -> { cref = CRef( x.Attribute(!!"cref").Value )
+                                                      description = normalizeSpace x.Value
+                                                    })
+                                |> List.ofSeq
+                  TypeParams = d.Elements(!!"typeparam") 
+                               |> Seq.map(fun x -> { cref = CRef( x.Attribute(!!"name").Value )
+                                                     description = normalizeSpace x.Value
+                                                   })
+                               |> List.ofSeq
+                }
+    | None -> NoDoc
 
 let LoadApiDoc (root : XElement) = 
     { XmlDocDocument.AssemblyName = root.Element(!!"assembly").Element(!!"name").Value
