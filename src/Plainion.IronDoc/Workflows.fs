@@ -8,17 +8,13 @@ open Plainion.IronDoc.Parsing
 open Plainion.IronDoc.Rendering
 
 let generateTypeDoc t xmlDoc writer = 
-    let ctx = 
-        { Loader = assemblyLoader
-          Writer = writer
-          Doc = xmlDoc }
+    let ctx = { Writer = writer
+                Doc = xmlDoc }
     render ctx t
     
 let generateAssemblyDoc (assembly : Assembly) xmlDoc writer = 
-    let ctx = 
-        { Loader = assemblyLoader
-          Writer = writer
-          Doc = xmlDoc }
+    let ctx = { Writer = writer
+                Doc = xmlDoc }
 
     writer.Write "# "
     writer.WriteLine xmlDoc.AssemblyName

@@ -4,10 +4,8 @@ namespace Plainion.IronDoc.Rendering
 open System.IO
 open Plainion.IronDoc.Parsing
 
-type TransformationContext = 
-    { Loader : AssemblyLoaderApi
-      Writer : TextWriter
-      Doc : XmlDocDocument }
+type TransformationContext = { Writer : TextWriter
+                               Doc : XmlDocDocument }
 
 [<AutoOpen>]
 module private MarkdownImpl =

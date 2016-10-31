@@ -81,7 +81,7 @@ module private ReflectionImpl =
         | Stop 
 
 [<AutoOpen>]
-module Api = 
+module ReflectionApi = 
     open System
     open System.Reflection
     open Plainion.IronDoc
