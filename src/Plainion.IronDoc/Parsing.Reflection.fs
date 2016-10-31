@@ -111,7 +111,6 @@ module ReflectionApi =
         { Load = fun assembly -> agent.PostAndReply( fun replyChannel -> LoadAssembly( assembly, replyChannel ) )
           Stop = fun () -> agent.Post Stop }
 
-
     let rec createDType (t : Type) =
         // we also want to have protected members
         let bindingFlags = BindingFlags.Instance ||| BindingFlags.Static ||| BindingFlags.DeclaredOnly
@@ -122,7 +121,7 @@ module ReflectionApi =
                                   parameterType = x.ParameterType })
             |> List.ofSeq
 
-        { assembly = t.Assembly.FullName
+        { assembly = t.Assembly
           nameSpace = t.Namespace
           name = t.Name
           fields =  t.GetFields(bindingFlags) 

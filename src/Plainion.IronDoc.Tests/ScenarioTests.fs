@@ -28,20 +28,11 @@ type internal SimplePublicClass() = class end
 module ParsingTests =
     open Plainion.IronDoc.Parsing
     
-    let getApiDoc assemblyLocation =
-        let docFile = Path.Combine( Path.GetDirectoryName( assemblyLocation ), Path.GetFileNameWithoutExtension( assemblyLocation ) + ".xml" )
-
-        loadApiDocFile docFile 
-
-    let getApiDocCached = 
-        memoize ( fun t -> getApiDoc t )
-       
     let transform ( t : Type ) =
         use writer = new StringWriter()
         
-        let apiDoc = getApiDocCached t.Assembly.Location
         let dType = createDType t
-        Workflows.generateTypeDoc dType apiDoc writer
+        Workflows.generateTypeDoc dType writer
         
         writer.ToString();
 

@@ -2,8 +2,9 @@
 [<AutoOpen>]
 module Plainion.IronDoc.DomainModel
 
-open System.Xml.Linq
 open System
+open System.Reflection
+open System.Xml.Linq
 
 type Field = { name : string
                fieldType : Type }
@@ -23,7 +24,7 @@ type Method = { name : string
                 parameters : Parameter list
                 returnType : Type }
 
-type DType = { assembly : string
+type DType = { assembly : Assembly
                nameSpace : string
                name : string 
                fields : Field list 

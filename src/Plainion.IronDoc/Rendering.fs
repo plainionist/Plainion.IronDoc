@@ -4,8 +4,7 @@ namespace Plainion.IronDoc.Rendering
 open System.IO
 open Plainion.IronDoc.Parsing
 
-type TransformationContext = { Writer : TextWriter
-                               Doc : XmlDocDocument }
+type TransformationContext = { Writer : TextWriter }
 
 [<AutoOpen>]
 module private MarkdownImpl =
@@ -195,7 +194,7 @@ module Api =
     open Plainion.IronDoc
 
     let render (ctx : TransformationContext) dtype = 
-        let getDoc = getXmlDocumentation ctx.Doc dtype
+        let getDoc = apiDocLoader.Get dtype
                 
         let getParameterSignature parameters = 
             parameters

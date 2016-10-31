@@ -6,9 +6,6 @@ open System.Reflection
 open System.Xml.Linq
 open Plainion.IronDoc
 
-type XmlDocDocument = { AssemblyName : string
-                        Members : XElement list } 
-
 [<AutoOpen>]
 module private Impl =
     let parseXElement (e:XElement) =
@@ -57,12 +54,17 @@ module private Impl =
         | Method x ->getFullName dtype + "." + x.name + getParametersSignature x.parameters |> sprintf "M:%s"
         | NestedType x ->getFullName dtype + "." + x.name |> sprintf "T:%s"
 
-[<AutoOpen>]
-module XmlDocApi = 
+    type XmlDocDocument = { assemblyName : string
+                            members : XElement list } 
+
+    let createXmlDoc (assembly:Assembly) (root:XElement) =
+        { XmlDocDocument.assemblyName = assembly.FullName
+          XmlDocDocument.members = root.Element(!!"members").Elements(!!"member") |> List.ofSeq }
+
     // ignored:  <list/> , <include/>, <value/>
-    let getXmlDocumentation xmlDoc dtype mt = 
+    let getApiDoc xmlDoc dtype mt = 
         let memberId = getMemberId dtype mt
-        let doc = xmlDoc.Members |> Seq.tryFind (fun m -> m.Attribute(!!"name").Value = memberId)
+        let doc = xmlDoc.members |> Seq.tryFind (fun m -> m.Attribute(!!"name").Value = memberId)
     
         match doc with
         | Some d -> { Summary = (parse (d.Elements(!!"summary")))
@@ -92,9 +94,41 @@ module XmlDocApi =
                     }
         | None -> NoDoc
 
-    let loadApiDocFile(file : string) = 
-        let root = XElement.Load (file)
-        
-        { XmlDocDocument.AssemblyName = root.Element(!!"assembly").Element(!!"name").Value
-          XmlDocDocument.Members = root.Element(!!"members").Elements(!!"member") |> List.ofSeq }
+    type GetApiDocMsg = 
+        | Get of DType * MemberType * replyChannel : AsyncReplyChannel<ApiDoc>
+        | Stop 
 
+[<AutoOpen>]
+module XmlDocApi = 
+    open System.IO
+
+    type ApiDocLoaderApi = {
+        Get: DType -> MemberType -> ApiDoc
+        Stop: unit -> unit
+    }
+
+    let apiDocLoader =
+        let agent = MailboxProcessor<GetApiDocMsg>.Start(fun inbox ->
+            let getXmlDoc xmlDocs dtype = 
+                match xmlDocs |> Seq.tryFind(fun x -> x.assemblyName = dtype.assembly.FullName) with
+                | Some d -> xmlDocs, d
+                | None -> let docFile = Path.ChangeExtension(dtype.assembly.Location, ".xml")
+                          let d = XElement.Load docFile |> createXmlDoc dtype.assembly
+                          d::xmlDocs,d
+            let rec loop xmlDocs =
+                async {
+                    let! msg = inbox.Receive()
+
+                    match msg with
+                    | Get (dtype, mt, replyChannel) -> 
+                        let newXmlDoc,xmlDoc = getXmlDoc xmlDocs dtype
+                        let apiDoc = getApiDoc xmlDoc dtype mt
+                    
+                        replyChannel.Reply apiDoc
+
+                        return! loop newXmlDoc
+                    | Stop -> return ()
+                }
+            loop [ ] ) 
+        { Get = fun dtype mt -> agent.PostAndReply( fun replyChannel -> Get( dtype, mt, replyChannel ) )
+          Stop = fun () -> agent.Post Stop }
