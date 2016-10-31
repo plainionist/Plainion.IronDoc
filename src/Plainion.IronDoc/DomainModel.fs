@@ -3,6 +3,39 @@
 module Plainion.IronDoc.DomainModel
 
 open System.Xml.Linq
+open System
+
+type Field = { name : string
+               fieldType : Type }
+
+type Parameter = { name : string
+                   parameterType : Type }
+
+type Constructor = { parameters : Parameter list }
+
+type Property = { name : string
+                  propertyType : Type }
+
+type Event = { name : string
+               eventHandlerType : Type }
+
+type Method = { name : string
+                parameters : Parameter list
+                returnType : Type }
+
+type DType = { Assembly : string
+               Namespace : string
+               Name : string 
+               Fields : Field list 
+               Constructors : Constructor list 
+               Properties : Property list 
+               Events : Event list 
+               Methods : Method list 
+               NestedTypes : DType list 
+             }
+
+let getFullName t =
+    sprintf "%s.%s" t.Namespace t.Name
 
 // Documentation about valid .Net XML documentation tags
 // https://msdn.microsoft.com/en-us/library/5ast78ax.aspx
@@ -44,21 +77,5 @@ let NoDoc = { Summary = []
               TypeParams = []
             }
 
-// TODO: member is one of the .net member types - it needs
-//       - syntax (name, return types, parameters) ... depending on member type
-//       - doc id 
-//       - and api doc itself ?? or would that be a different type ??
-
-type M = 
-    | Type of string
-    | Field
-    | Constructor
-    | Property
-    | Event
-    | Method
-    | NestedType
-
-type Member = { Assembly : string
-                Namespace : string
-                Name : string
-                Doc : MemberDoc }
+type MemberLite = { Name : string
+                    Doc : MemberDoc }

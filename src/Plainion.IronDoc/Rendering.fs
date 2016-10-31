@@ -58,14 +58,10 @@ let processInline inl =
                processSee cref
     | SeeAlso x -> String.Empty // ignore here - will be processed later
 
-let processMemberDoc ctx (memb:Member) (level :int) = 
+let processMemberDoc ctx (memb:MemberLite) (level :int) = 
     memb.Doc.Summary 
     |> Seq.map processInline
     |> Seq.iter ctx.Writer.WriteLine
-
-    // TODO: only for types unless we generate one file per member
-//    ctx.Writer.WriteLine("**Namespace:** {0}", memb.Namespace)
-//    ctx.Writer.WriteLine("**Assembly:** {0}", memb.Assembly)
 
     let headlineMarker = "#".PadLeft((level + 1), '#')
 
@@ -193,94 +189,87 @@ let processMembers ctx (headline : string) allMembers =
         members
         |> Seq.iter(fun m -> processMember ctx m)
 
-let getMethodSignatureWitoutReturnType (m:MethodBase) =
-    let parameterSignature = 
-        m.GetParameters()
-        |> Seq.map( fun p -> p.ParameterType.ToString() )
-        |> String.concat ","
-
-    m.Name + "(" + parameterSignature + ")"
-
-let getMethodSignature (m:MethodInfo) =
-    let returnType =
-        match m.ReturnType with 
-        | t when t = typeof<System.Void> -> "void" 
-        | _ -> m.ReturnType.FullName
-
-    returnType + " " + getMethodSignatureWitoutReturnType m
-
-let getMemberName (m:MemberInfo) =
-    match m with
-    | :? ConstructorInfo as x -> getMethodSignatureWitoutReturnType x
-    | :? MethodInfo as x -> getMethodSignature x
-    | _ -> "not implemented"
-
-
-// TODO: separate parser from renderer further - take all required infos from reflection and put into "member descriptor" so that
-//       we do not have to handle any reflection in rendering process any longer
-
-
 let processType (ctx : TransformationContext) (t : Type) = 
+    let dtype = createDType t
+
     ctx.Writer.WriteLine()
     ctx.Writer.Write "## "
-    ctx.Writer.WriteLine t.FullName
+    ctx.Writer.WriteLine( getFullName dtype )
 
-    let mt = { Assembly = t.Assembly.FullName
-               Namespace = t.Namespace
-               Name = t.Name
-               Doc = getXmlDocumentation ctx.Doc t }
+    ctx.Writer.WriteLine("**Namespace:** {0}", dtype.Namespace)
+    ctx.Writer.WriteLine("**Assembly:** {0}", dtype.Assembly)
+
+    let getDoc = getXmlDocumentation ctx.Doc
+            
+    let getParametersSignature parameters = 
+        match parameters with
+        | [] -> ""
+        | _ -> 
+            "(" + (parameters
+                    |> Seq.map (fun p -> p.parameterType.FullName)
+                    |> String.concat ",")
+            + ")"
+    
+    let declaringTypeFullName = getFullName dtype
+
+    let mt = { Name = dtype.Name
+               Doc = declaringTypeFullName |> sprintf "T:%s" |> getDoc }
     processMemberDoc ctx mt 2
 
-    let bindingFlags = BindingFlags.Instance ||| BindingFlags.Static ||| BindingFlags.Public ||| BindingFlags.DeclaredOnly
+    let getParameterSignature parameters = 
+        parameters
+        |> Seq.map( fun p -> p.parameterType.ToString() )
+        |> String.concat ","
 
     processMembers
         ctx 
         "Fields" 
-        ( t.GetFields(bindingFlags) 
-          |> Seq.filter(fun m -> not m.IsPrivate)
-          |> Seq.map(fun x -> { Assembly = mt.Assembly
-                                Namespace = mt.Namespace
-                                Name = x.FieldType.FullName + " " + x.Name
-                                Doc = getXmlDocumentation ctx.Doc x } ) )
+        ( dtype.Fields
+          |> Seq.map(fun x -> { Name = x.fieldType.FullName + " " + x.name
+                                Doc = declaringTypeFullName + "." + x.name |> sprintf "F:%s" |> getDoc } ) )
 
     processMembers
         ctx 
         "Constructors" 
-        ( t.GetConstructors(bindingFlags) 
-          |> Seq.filter(fun m -> not m.IsPrivate)
-          |> Seq.map(fun x -> { Assembly = mt.Assembly
-                                Namespace = mt.Namespace
-                                Name = getMemberName x
-                                Doc = getXmlDocumentation ctx.Doc x } ) )
+        ( dtype.Constructors
+          |> Seq.map(fun x -> { Name = "Constructo(" + (getParameterSignature x.parameters) + ")"
+                                Doc = declaringTypeFullName + "." + "#ctor" + getParametersSignature x.parameters |> sprintf "M:%s" |> getDoc } ) )
 
     processMembers
         ctx 
         "Properties" 
-        ( t.GetProperties(bindingFlags) 
-          |> Seq.filter(fun m -> not m.GetMethod.IsPrivate)
-          |> Seq.map(fun x -> { Assembly = mt.Assembly
-                                Namespace = mt.Namespace
-                                Name = x.PropertyType.FullName + " " + x.Name
-                                Doc = getXmlDocumentation ctx.Doc x } ) )
+        ( dtype.Properties 
+          |> Seq.map(fun x -> { Name = x.propertyType.FullName + " " + x.name
+                                Doc = declaringTypeFullName + "." + x.name |> sprintf "P:%s" |> getDoc } ) )
     
     processMembers
         ctx 
         "Events" 
-        ( t.GetEvents(bindingFlags) 
-          |> Seq.filter(fun m -> not m.AddMethod.IsPrivate)
-          |> Seq.map(fun x -> { Assembly = mt.Assembly
-                                Namespace = mt.Namespace
-                                Name = x.EventHandlerType.FullName + " " + x.Name
-                                Doc = getXmlDocumentation ctx.Doc x } ) )
+        ( dtype.Events
+          |> Seq.map(fun x -> { Name = x.eventHandlerType.FullName + " " + x.name
+                                Doc = declaringTypeFullName + "." + x.name |> sprintf "E:%s" |> getDoc } ) )
+
+    let getMethodSignature m =
+        let returnType =
+            match m.returnType with 
+            | t when t = typeof<System.Void> -> "void" 
+            | _ -> m.returnType.FullName
+
+        returnType + " " + m.name + "(" + (getParameterSignature m.parameters)+ ")"
 
     processMembers
         ctx 
         "Methods" 
-        ( t.GetMethods(bindingFlags) 
-          |> Seq.filter(fun m -> not m.IsSpecialName && not m.IsPrivate)
-          |> Seq.map(fun x -> { Assembly = mt.Assembly
-                                Namespace = mt.Namespace
-                                Name = getMemberName x
-                                Doc = getXmlDocumentation ctx.Doc x } ) )
+        ( dtype.Methods
+          |> Seq.map(fun x -> { Name = getMethodSignature x
+                                Doc = declaringTypeFullName + "." + x.name + getParametersSignature x.parameters |> sprintf "M:%s" |> getDoc } ) )
 
-
+//    processMembers
+//        ctx 
+//        "Nested Types" 
+//        ( dtype.NestedTypes
+//          |> Seq.map(fun x -> { Name = getMethodSignature x
+//                                Doc = declaringTypeFullName + "." + x.name + getMethodParameterSignature mi |> sprintf "M:%s" |> getDoc } ) )
+//
+//// t.Namespace + "." + mi.DeclaringType.Name + "." + mi.Name |> sprintf "T:%s"
+//
