@@ -37,6 +37,11 @@ let parse (elements:XElement seq) =
     |> Seq.collect parseMember
     |> List.ofSeq
 
+let getMemberId (m:obj) =
+    match m with
+    | :? DType as t -> getFullName t |> sprintf "T:%s" 
+    | _ -> failwithf "Unknown member type: %s" (m.GetType().ToString())
+
 // ignored:  <list/> , <include/>, <value/>
 let getXmlDocumentation xmlDoc memberId = 
     let doc = xmlDoc.Members |> Seq.tryFind (fun m -> m.Attribute(!!"name").Value = memberId)

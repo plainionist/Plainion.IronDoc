@@ -57,15 +57,15 @@ type Inline =
     | See of CRef
     | SeeAlso of CRef
 
-type MemberDoc = { Summary : Inline list
-                   Remarks : Inline list
-                   Params : CRefDescription list
-                   Returns : Inline list
-                   Exceptions : CRefDescription list
-                   Example : Inline list
-                   Permissions : CRefDescription list
-                   TypeParams : CRefDescription list
-                 }
+type ApiDoc = { Summary : Inline list
+                Remarks : Inline list
+                Params : CRefDescription list
+                Returns : Inline list
+                Exceptions : CRefDescription list
+                Example : Inline list
+                Permissions : CRefDescription list
+                TypeParams : CRefDescription list
+              }
 
 let NoDoc = { Summary = []
               Remarks = []
@@ -76,6 +76,3 @@ let NoDoc = { Summary = []
               Permissions = []
               TypeParams = []
             }
-
-type MemberLite = { Name : string
-                    Doc : MemberDoc }

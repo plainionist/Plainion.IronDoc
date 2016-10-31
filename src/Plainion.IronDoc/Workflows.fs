@@ -22,9 +22,12 @@ let transformAssembly (assembly : Assembly) xmlDoc writer =
     writer.Write "# "
     writer.WriteLine xmlDoc.AssemblyName
 
+    let renderType = processType ctx
+
     assembly.GetTypes()
     |> Seq.filter (fun t -> t.IsPublic)
-    |> Seq.iter (fun t -> processType ctx t)
+    |> Seq.map createDType
+    |> Seq.iter renderType
     
 let transformFile assemblyFile outputFolder = 
     let assembly = assemblyLoader.Load assemblyFile

@@ -15,6 +15,9 @@ type TransformationContext =
       Writer : TextWriter
       Doc : XmlDocDocument }
 
+type Member = { Name : string
+                Doc : ApiDoc }
+
 let processText txt =
     normalizeSpace txt  
 
@@ -58,7 +61,7 @@ let processInline inl =
                processSee cref
     | SeeAlso x -> String.Empty // ignore here - will be processed later
 
-let processMemberDoc ctx (memb:MemberLite) (level :int) = 
+let processMemberDoc ctx (memb:Member) (level :int) = 
     memb.Doc.Summary 
     |> Seq.map processInline
     |> Seq.iter ctx.Writer.WriteLine
@@ -189,9 +192,7 @@ let processMembers ctx (headline : string) allMembers =
         members
         |> Seq.iter(fun m -> processMember ctx m)
 
-let processType (ctx : TransformationContext) (t : Type) = 
-    let dtype = createDType t
-
+let processType (ctx : TransformationContext) dtype = 
     ctx.Writer.WriteLine()
     ctx.Writer.Write "## "
     ctx.Writer.WriteLine( getFullName dtype )
@@ -212,27 +213,26 @@ let processType (ctx : TransformationContext) (t : Type) =
     
     let declaringTypeFullName = getFullName dtype
 
-    let mt = { Name = dtype.Name
-               Doc = declaringTypeFullName |> sprintf "T:%s" |> getDoc }
-    processMemberDoc ctx mt 2
+    processMemberDoc ctx { Name = dtype.Name
+                           Doc = getMemberId dtype |> getDoc } 2
 
     let getParameterSignature parameters = 
         parameters
         |> Seq.map( fun p -> p.parameterType.ToString() )
         |> String.concat ","
 
-    processMembers
-        ctx 
-        "Fields" 
-        ( dtype.Fields
-          |> Seq.map(fun x -> { Name = x.fieldType.FullName + " " + x.name
-                                Doc = declaringTypeFullName + "." + x.name |> sprintf "F:%s" |> getDoc } ) )
+    // TODO: use "Member" and "DType" as API to ApiDoc
+
+    dtype.Fields
+    |> Seq.map(fun x -> { Name = x.fieldType.FullName + " " + x.name
+                          Doc = declaringTypeFullName + "." + x.name |> sprintf "F:%s" |> getDoc } )
+    |> processMembers ctx "Fields"
 
     processMembers
         ctx 
         "Constructors" 
         ( dtype.Constructors
-          |> Seq.map(fun x -> { Name = "Constructo(" + (getParameterSignature x.parameters) + ")"
+          |> Seq.map(fun x -> { Name = "Constructor(" + (getParameterSignature x.parameters) + ")"
                                 Doc = declaringTypeFullName + "." + "#ctor" + getParametersSignature x.parameters |> sprintf "M:%s" |> getDoc } ) )
 
     processMembers
