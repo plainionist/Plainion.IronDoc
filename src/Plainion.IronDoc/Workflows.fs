@@ -2,18 +2,19 @@
 [<AutoOpen>]
 module Plainion.IronDoc.Workflows
 
-open Plainion.IronDoc.Parsing
-open System.Reflection
 open System.IO
+open System.Reflection
+open Plainion.IronDoc.Parsing
+open Plainion.IronDoc.Rendering
 
-let transformType t xmlDoc writer = 
+let generateTypeDoc t xmlDoc writer = 
     let ctx = 
         { Loader = assemblyLoader
           Writer = writer
           Doc = xmlDoc }
-    processType ctx t
+    render ctx t
     
-let transformAssembly (assembly : Assembly) xmlDoc writer = 
+let generateAssemblyDoc (assembly : Assembly) xmlDoc writer = 
     let ctx = 
         { Loader = assemblyLoader
           Writer = writer
@@ -22,14 +23,14 @@ let transformAssembly (assembly : Assembly) xmlDoc writer =
     writer.Write "# "
     writer.WriteLine xmlDoc.AssemblyName
 
-    let renderType = processType ctx
+    let renderType = render ctx
 
     assembly.GetTypes()
     |> Seq.filter (fun t -> t.IsPublic)
     |> Seq.map createDType
     |> Seq.iter renderType
     
-let transformFile assemblyFile outputFolder = 
+let generateAssemblyFileDoc assemblyFile outputFolder = 
     let assembly = assemblyLoader.Load assemblyFile
     let xmlDocFile = Path.ChangeExtension(assemblyFile, ".xml")
         
@@ -37,5 +38,5 @@ let transformFile assemblyFile outputFolder =
 
     use writer = new StreamWriter(Path.Combine(outputFolder, Path.GetFileNameWithoutExtension(assemblyFile) + ".md"))
     let doc = loadApiDocFile xmlDocFile
-    transformAssembly assembly doc writer
+    generateAssemblyDoc assembly doc writer
 

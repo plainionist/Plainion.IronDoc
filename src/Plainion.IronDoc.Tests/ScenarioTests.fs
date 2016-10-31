@@ -41,7 +41,7 @@ module ParsingTests =
         
         let apiDoc = getApiDocCached t.Assembly.Location
         let dType = createDType t
-        Workflows.transformType dType apiDoc writer
+        Workflows.generateTypeDoc dType apiDoc writer
         
         writer.ToString();
 

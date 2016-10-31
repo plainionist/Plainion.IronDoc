@@ -73,6 +73,6 @@ let main argv =
     | Some x ->
         printf "Generating documentation to: %s" x.output
 
-        Workflows.transformFile x.assembly x.output
+        Workflows.generateAssemblyFileDoc x.assembly x.output
 
         0

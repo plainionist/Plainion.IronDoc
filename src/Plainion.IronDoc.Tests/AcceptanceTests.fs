@@ -32,7 +32,7 @@ module AcceptanceTests =
         use writer = new StringWriter()
         
         let dType = createDType t
-        Workflows.transformType dType myApiDoc writer
+        Workflows.generateTypeDoc dType myApiDoc writer
         
         writer.ToString()
 

@@ -23,19 +23,28 @@ type Method = { name : string
                 parameters : Parameter list
                 returnType : Type }
 
-type DType = { Assembly : string
-               Namespace : string
-               Name : string 
-               Fields : Field list 
-               Constructors : Constructor list 
-               Properties : Property list 
-               Events : Event list 
-               Methods : Method list 
-               NestedTypes : DType list 
+type DType = { assembly : string
+               nameSpace : string
+               name : string 
+               fields : Field list 
+               constructors : Constructor list 
+               properties : Property list 
+               events : Event list 
+               methods : Method list 
+               nestedTypes : DType list 
              }
 
 let getFullName t =
-    sprintf "%s.%s" t.Namespace t.Name
+    sprintf "%s.%s" t.nameSpace t.name
+
+type MemberType =
+    | Type of DType
+    | Field of Field
+    | Constructor of Constructor
+    | Property of Property
+    | Event of Event
+    | Method of Method
+    | NestedType of DType
 
 // Documentation about valid .Net XML documentation tags
 // https://msdn.microsoft.com/en-us/library/5ast78ax.aspx

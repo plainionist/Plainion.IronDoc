@@ -10,7 +10,7 @@ open Plainion.IronDoc
 type XmlDocDocument = { AssemblyName : string
                         Members : XElement list } 
 
-let parseXElement (e:XElement) =
+let private parseXElement (e:XElement) =
     match e.Name.LocalName with
     | InvariantEqual "c" -> C e.Value
     | InvariantEqual "code" -> Code e.Value
@@ -21,13 +21,13 @@ let parseXElement (e:XElement) =
     | InvariantEqual "SeeAlso" -> SeeAlso (CRef (e.Attribute(!!"cref").Value))
     | x -> failwithf "Failed to parse: %s" x
 
-let parseXNode (node:XNode) =
+let private parseXNode (node:XNode) =
     match node with
     | :? XText as txt -> Some ( Text (txt.Value.Trim() ) )
     | :? XElement as e -> Some( parseXElement e )
     | _ -> None
 
-let parse (elements:XElement seq) =
+let private parse (elements:XElement seq) =
     let parseMember (element:XElement) =
         element.Nodes()
         |> Seq.choose parseXNode
@@ -37,13 +37,28 @@ let parse (elements:XElement seq) =
     |> Seq.collect parseMember
     |> List.ofSeq
 
-let getMemberId (m:obj) =
-    match m with
-    | :? DType as t -> getFullName t |> sprintf "T:%s" 
-    | _ -> failwithf "Unknown member type: %s" (m.GetType().ToString())
+let getMemberId dtype mt =
+    let getParametersSignature parameters = 
+        match parameters with
+        | [] -> ""
+        | _ -> 
+            "(" + (parameters
+                    |> Seq.map (fun p -> p.parameterType.FullName)
+                    |> String.concat ",")
+            + ")"
+
+    match mt with
+    | Type x -> getFullName x |> sprintf "T:%s" 
+    | Field x -> getFullName dtype + "." + x.name |> sprintf "F:%s" 
+    | Constructor x -> getFullName dtype + "." + "#ctor" + getParametersSignature x.parameters |> sprintf "M:%s"
+    | Property x -> getFullName dtype + "." + x.name |> sprintf "P:%s"
+    | Event x -> getFullName dtype + "." + x.name |> sprintf "E:%s" |> sprintf "M:%s"
+    | Method x ->getFullName dtype + "." + x.name + getParametersSignature x.parameters |> sprintf "M:%s"
+    | NestedType x ->getFullName dtype + "." + x.name |> sprintf "T:%s"
 
 // ignored:  <list/> , <include/>, <value/>
-let getXmlDocumentation xmlDoc memberId = 
+let getXmlDocumentation xmlDoc dtype mt = 
+    let memberId = getMemberId dtype mt
     let doc = xmlDoc.Members |> Seq.tryFind (fun m -> m.Attribute(!!"name").Value = memberId)
     
     match doc with
