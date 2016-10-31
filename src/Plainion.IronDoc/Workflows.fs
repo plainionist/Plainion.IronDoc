@@ -8,16 +8,13 @@ open Plainion.IronDoc.Parsing
 open Plainion.IronDoc.Rendering
 
 let generateTypeDoc t writer = 
-    let ctx = { Writer = writer }
-    render ctx t
+    render writer t
     
-let generateAssemblyDoc (assembly : Assembly) writer = 
-    let ctx = { Writer = writer }
-
+let generateAssemblyDoc (assembly : Assembly) (writer:TextWriter) = 
     writer.Write "# "
     writer.WriteLine(assembly.GetName().Name)
 
-    let renderType = render ctx
+    let renderType = render writer
 
     assembly.GetTypes()
     |> Seq.filter (fun t -> t.IsPublic)

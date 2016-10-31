@@ -4,8 +4,6 @@ namespace Plainion.IronDoc.Rendering
 open System.IO
 open Plainion.IronDoc.Parsing
 
-type TransformationContext = { Writer : TextWriter }
-
 [<AutoOpen>]
 module private MarkdownImpl =
     open System
@@ -41,9 +39,6 @@ module private MarkdownImpl =
     let processPara (str:string) =
         sprintf "%s%s%s" nl str nl
 
-    let processIfNotNull ctx (e:XElement) f =
-        if e <> null then f ctx e
-
     let processInline inl =
         match inl with
         | Text x -> processText x
@@ -58,95 +53,95 @@ module private MarkdownImpl =
                    processSee cref
         | SeeAlso x -> String.Empty // ignore here - will be processed later
 
-    let processMemberDoc ctx (memb:Member) (level :int) = 
+    let processMemberDoc (writer:TextWriter) (memb:Member) (level :int) = 
         memb.Doc.Summary 
         |> Seq.map processInline
-        |> Seq.iter ctx.Writer.WriteLine
+        |> Seq.iter writer.WriteLine
 
         let headlineMarker = "#".PadLeft((level + 1), '#')
 
-        ctx.Writer.WriteLine ()
-        ctx.Writer.WriteLine (headlineMarker + " Syntax")
+        writer.WriteLine ()
+        writer.WriteLine (headlineMarker + " Syntax")
 
         // TODO: write syntax again - later in several languages
 
         if memb.Doc.Params.Length > 0 then
-            ctx.Writer.WriteLine ()
-            ctx.Writer.WriteLine ( headlineMarker + "#" + " Parameters")
+            writer.WriteLine ()
+            writer.WriteLine ( headlineMarker + "#" + " Parameters")
 
             memb.Doc.Params 
             |> Seq.iter( fun p -> 
-                ctx.Writer.WriteLine ()
+                writer.WriteLine ()
 
-                ctx.Writer.Write "> **"
+                writer.Write "> **"
 
-                ctx.Writer.Write p.cref
+                writer.Write p.cref
 
-                ctx.Writer.Write ":**  " 
-                ctx.Writer.Write p.description
-                ctx.Writer.WriteLine ()
+                writer.Write ":**  " 
+                writer.Write p.description
+                writer.WriteLine ()
             )
 
         if memb.Doc.Returns.Length > 0 then
-            ctx.Writer.WriteLine ()
-            ctx.Writer.WriteLine (headlineMarker + "#" + " Return value")
+            writer.WriteLine ()
+            writer.WriteLine (headlineMarker + "#" + " Return value")
 
             memb.Doc.Returns 
             |> Seq.map processInline
-            |> Seq.iter ctx.Writer.WriteLine
+            |> Seq.iter writer.WriteLine
 
         if memb.Doc.Exceptions.Length > 0 then
-            ctx.Writer.WriteLine();
-            ctx.Writer.WriteLine("> " + headlineMarker + " Exceptions");
+            writer.WriteLine();
+            writer.WriteLine("> " + headlineMarker + " Exceptions");
 
             memb.Doc.Exceptions
             |> Seq.iter( fun ex -> 
-                ctx.Writer.WriteLine ()
+                writer.WriteLine ()
 
-                ctx.Writer.Write "**"
+                writer.Write "**"
 
                 let (CRef crefValue) = ex.cref
                 let cref = substringAfter crefValue ':' 
-                ctx.Writer.Write cref
+                writer.Write cref
 
-                ctx.Writer.WriteLine "**"
-                ctx.Writer.Write ex.description
-                ctx.Writer.WriteLine ()
+                writer.WriteLine "**"
+                writer.Write ex.description
+                writer.WriteLine ()
             )
 
         if memb.Doc.Remarks.Length > 0 then
-            ctx.Writer.WriteLine ()
-            ctx.Writer.WriteLine (headlineMarker + " Remarks")
+            writer.WriteLine ()
+            writer.WriteLine (headlineMarker + " Remarks")
 
             memb.Doc.Remarks 
             |> Seq.map processInline
-            |> Seq.iter ctx.Writer.WriteLine
+            |> Seq.iter writer.WriteLine
 
         if memb.Doc.Example.Length > 0 then
-            ctx.Writer.WriteLine ()
-            ctx.Writer.WriteLine (headlineMarker + " Example")
+            writer.WriteLine ()
+            writer.WriteLine (headlineMarker + " Example")
 
             memb.Doc.Example 
             |> Seq.map processInline
-            |> Seq.iter ctx.Writer.WriteLine
+            |> Seq.iter writer.WriteLine
 
         if memb.Doc.Permissions.Length > 0 then
-            ctx.Writer.WriteLine();
-            ctx.Writer.WriteLine(headlineMarker + " Permissions");
+            writer.WriteLine();
+            writer.WriteLine(headlineMarker + " Permissions");
 
             memb.Doc.Exceptions
             |> Seq.iter( fun ex -> 
-                ctx.Writer.WriteLine ()
+                writer.WriteLine ()
 
-                ctx.Writer.Write "**"
+                writer.Write "**"
 
                 let (CRef crefValue) = ex.cref
                 let cref = substringAfter crefValue ':' 
-                ctx.Writer.Write cref
+                writer.Write cref
 
-                ctx.Writer.WriteLine "**"
-                ctx.Writer.Write ex.description
-                ctx.Writer.WriteLine ()
+                writer.WriteLine "**"
+                writer.Write ex.description
+                writer.WriteLine ()
             )
 
         let seeAlso = [ memb.Doc.Summary
@@ -162,38 +157,38 @@ module private MarkdownImpl =
                       |> List.ofSeq
 
         if seeAlso.Length > 0 then
-            ctx.Writer.WriteLine ()
-            ctx.Writer.WriteLine (headlineMarker + " See also")
+            writer.WriteLine ()
+            writer.WriteLine (headlineMarker + " See also")
 
             seeAlso 
-            |> Seq.iter ctx.Writer.WriteLine
+            |> Seq.iter writer.WriteLine
                   
-    let processMember ctx m =
-        ctx.Writer.WriteLine()
+    let processMember (writer:TextWriter) m =
+        writer.WriteLine()
 
-        ctx.Writer.Write "#### "
-        ctx.Writer.WriteLine m.Name
+        writer.Write "#### "
+        writer.WriteLine m.Name
 
-        ctx.Writer.WriteLine()
+        writer.WriteLine()
 
-        processMemberDoc ctx m 4
+        processMemberDoc writer m 4
 
-    let processMembers ctx (headline : string) allMembers = 
+    let processMembers (writer:TextWriter) (headline : string) allMembers = 
         let members = allMembers |> List.ofSeq
         
         if not ( List.isEmpty members ) then
-            ctx.Writer.WriteLine()
-            ctx.Writer.Write "### "
-            ctx.Writer.WriteLine headline
+            writer.WriteLine()
+            writer.Write "### "
+            writer.WriteLine headline
 
             members
-            |> Seq.iter(fun m -> processMember ctx m)
+            |> Seq.iter(fun m -> processMember writer m)
 
 [<AutoOpen>]
 module Api =
     open Plainion.IronDoc
 
-    let render (ctx : TransformationContext) dtype = 
+    let render (writer : TextWriter) dtype = 
         let getDoc = apiDocLoader.Get dtype
                 
         let getParameterSignature parameters = 
@@ -209,40 +204,40 @@ module Api =
 
             returnType + " " + m.name + "(" + (getParameterSignature m.parameters)+ ")"
 
-        ctx.Writer.WriteLine()
-        ctx.Writer.Write "## "
-        ctx.Writer.WriteLine( getFullName dtype )
+        writer.WriteLine()
+        writer.Write "## "
+        writer.WriteLine( getFullName dtype )
 
-        ctx.Writer.WriteLine("**Namespace:** {0}", dtype.nameSpace)
-        ctx.Writer.WriteLine("**Assembly:** {0}", dtype.assembly)
+        writer.WriteLine("**Namespace:** {0}", dtype.nameSpace)
+        writer.WriteLine("**Assembly:** {0}", dtype.assembly)
 
-        processMemberDoc ctx { Name = dtype.name
-                               Doc = MemberType.Type(dtype) |> getDoc } 2
+        processMemberDoc writer { Name = dtype.name
+                                  Doc = MemberType.Type(dtype) |> getDoc } 2
 
         dtype.fields
         |> Seq.map(fun x -> { Name = x.fieldType.FullName + " " + x.name
                               Doc = Field(x) |> getDoc } )
-        |> processMembers ctx "Fields"
+        |> processMembers writer "Fields"
 
         dtype.constructors
         |> Seq.map(fun x -> { Name = "Constructor(" + (getParameterSignature x.parameters) + ")"
                               Doc = Constructor(x) |> getDoc } )
-        |> processMembers ctx "Constructors" 
+        |> processMembers writer "Constructors" 
 
         dtype.properties 
         |> Seq.map(fun x -> { Name = x.propertyType.FullName + " " + x.name
                               Doc = Property(x) |> getDoc } )
-        |> processMembers ctx "Properties" 
+        |> processMembers writer "Properties" 
     
         dtype.events
         |> Seq.map(fun x -> { Name = x.eventHandlerType.FullName + " " + x.name
                               Doc = Event(x) |> getDoc } )
-        |> processMembers ctx "Events" 
+        |> processMembers writer "Events" 
 
         dtype.methods
         |> Seq.map(fun x -> { Name = getMethodSignature x
                               Doc = Method(x) |> getDoc } ) 
-        |> processMembers ctx "Methods" 
+        |> processMembers writer "Methods" 
 
     //    processMembers
     //        ctx 

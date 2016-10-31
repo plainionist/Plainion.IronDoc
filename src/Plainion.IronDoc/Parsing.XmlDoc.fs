@@ -54,17 +54,16 @@ module private Impl =
         | Method x ->getFullName dtype + "." + x.name + getParametersSignature x.parameters |> sprintf "M:%s"
         | NestedType x ->getFullName dtype + "." + x.name |> sprintf "T:%s"
 
-    type XmlDocDocument = { assemblyName : string
-                            members : XElement list } 
+    type XmlDocDocument = XmlDocDocument of XElement list
 
     let createXmlDoc (assembly:Assembly) (root:XElement) =
-        { XmlDocDocument.assemblyName = assembly.FullName
-          XmlDocDocument.members = root.Element(!!"members").Elements(!!"member") |> List.ofSeq }
+        XmlDocDocument( root.Element(!!"members").Elements(!!"member") |> List.ofSeq )
 
     // ignored:  <list/> , <include/>, <value/>
     let getApiDoc xmlDoc dtype mt = 
         let memberId = getMemberId dtype mt
-        let doc = xmlDoc.members |> Seq.tryFind (fun m -> m.Attribute(!!"name").Value = memberId)
+        let (XmlDocDocument docMembers ) = xmlDoc 
+        let doc = docMembers |> Seq.tryFind (fun m -> m.Attribute(!!"name").Value = memberId)
     
         match doc with
         | Some d -> { Summary = (parse (d.Elements(!!"summary")))
@@ -110,11 +109,11 @@ module XmlDocApi =
     let apiDocLoader =
         let agent = MailboxProcessor<GetApiDocMsg>.Start(fun inbox ->
             let getXmlDoc xmlDocs dtype = 
-                match xmlDocs |> Seq.tryFind(fun x -> x.assemblyName = dtype.assembly.FullName) with
+                match xmlDocs |> Map.tryFind dtype.assembly.FullName with
                 | Some d -> xmlDocs, d
                 | None -> let docFile = Path.ChangeExtension(dtype.assembly.Location, ".xml")
                           let d = XElement.Load docFile |> createXmlDoc dtype.assembly
-                          d::xmlDocs,d
+                          xmlDocs.Add(dtype.assembly.FullName, d),d
             let rec loop xmlDocs =
                 async {
                     let! msg = inbox.Receive()
@@ -129,6 +128,6 @@ module XmlDocApi =
                         return! loop newXmlDoc
                     | Stop -> return ()
                 }
-            loop [ ] ) 
+            loop Map.empty ) 
         { Get = fun dtype mt -> agent.PostAndReply( fun replyChannel -> Get( dtype, mt, replyChannel ) )
           Stop = fun () -> agent.Post Stop }
