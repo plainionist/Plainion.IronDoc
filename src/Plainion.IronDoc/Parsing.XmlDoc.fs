@@ -56,7 +56,7 @@ module private Impl =
 
     type XmlDocDocument = XmlDocDocument of XElement list
 
-    let createXmlDoc (assembly:Assembly) (root:XElement) =
+    let createXmlDoc (root:XElement) =
         XmlDocDocument( root.Element(!!"members").Elements(!!"member") |> List.ofSeq )
 
     // ignored:  <list/> , <include/>, <value/>
@@ -109,11 +109,12 @@ module XmlDocApi =
     let apiDocLoader =
         let agent = MailboxProcessor<GetApiDocMsg>.Start(fun inbox ->
             let getXmlDoc xmlDocs dtype = 
-                match xmlDocs |> Map.tryFind dtype.assembly.FullName with
+                match xmlDocs |> Map.tryFind dtype.assembly.location with
                 | Some d -> xmlDocs, d
-                | None -> let docFile = Path.ChangeExtension(dtype.assembly.Location, ".xml")
-                          let d = XElement.Load docFile |> createXmlDoc dtype.assembly
-                          xmlDocs.Add(dtype.assembly.FullName, d),d
+                | None -> let docFile = Path.ChangeExtension(dtype.assembly.location, ".xml")
+                          let d = XElement.Load docFile |> createXmlDoc
+                          xmlDocs.Add(dtype.assembly.location, d),d
+
             let rec loop xmlDocs =
                 async {
                     let! msg = inbox.Receive()

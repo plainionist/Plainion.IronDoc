@@ -28,31 +28,23 @@ type internal SimplePublicClass() = class end
 module ParsingTests =
     open Plainion.IronDoc.Parsing
     
-    let transform ( t : Type ) =
-        use writer = new StringWriter()
-        
-        let dType = createDType t
-        Workflows.generateTypeDoc dType writer
-        
-        writer.ToString();
-
     [<Test>]
     let ``Simple class summary rendered`` () = 
-        let markdownDocument = transform typedefof<SimplePublicClass>
+        let markdownDocument = renderApiDoc typedefof<SimplePublicClass>
 
         // TODO: to unspecific
         Assert.That( markdownDocument, Does.Contain "This is a summary" )
 
     [<Test>]
     let ``Overwritten method is rendered``() =
-        let markdownDocument = transform typedefof<OverwrittenMethods>
+        let markdownDocument = renderApiDoc typedefof<OverwrittenMethods>
 
         // TODO: to unspecific
         Assert.That( markdownDocument, Does.Contain @"Returns nicely formatted message about the state of this object" )
 
     [<Test>]
     let ``Nested type summary is rendered``() =
-        let markdownDocument = transform typedefof<Scenarios.NestedType.Nested>
+        let markdownDocument = renderApiDoc typedefof<Scenarios.NestedType.Nested>
 
         // TODO: to unspecific
         Assert.That( markdownDocument, Does.Contain @"I am nested" )

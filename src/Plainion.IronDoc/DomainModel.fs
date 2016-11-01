@@ -24,7 +24,15 @@ type Method = { name : string
                 parameters : Parameter list
                 returnType : Type }
 
-type DType = { assembly : Assembly
+/// <summary>
+/// Assemblies are loaded with "reflection only" and from byte array in order to NOT create a lock
+/// on the file. With this approach the Assembly object does not provide any meaningful name anylonger
+/// </summary>
+type DAssembly = { name : string
+                   location : string
+                   assembly : Assembly }
+
+type DType = { assembly : DAssembly
                nameSpace : string
                name : string 
                fields : Field list 

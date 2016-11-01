@@ -1,38 +1,42 @@
 ﻿
-## Plainion.IronDoc.Tests.Fakes.Acceptance.UseCase1
+# Plainion.IronDoc.Tests.Fakes.Acceptance.UseCase1
+
+**Namespace:** Plainion.IronDoc.Tests.Fakes.Acceptance
+**Assembly:** Plainion.IronDoc.Tests.Fakes
+
 This is use case number one.
 
 A dedicated paragraph
 
-> ### Remarks
-> And here are some remarks
+### Remarks
+And here are some remarks
 
-### Constructors
+## Constructors
 
-#### .ctor()
+### .ctor()
 Creates default intance of this use case
 
-#### .ctor(System.String)
+### .ctor(System.String)
 
 
-### Properties
+## Properties
 
-#### System.String S
+### System.String S
 Accessor for the member S
 
-#### System.String Name
+### System.String Name
 
 
-### Methods
+## Methods
 
-#### void Run(System.String)
+### void Run(System.String)
 Simple member
 
-> ##### Parameters
-> **:**  some string
+#### Parameters
+**:**  some string
 
-#### Plainion.IronDoc.Tests.Fakes.Acceptance.UseCase1 Factory()
+### Plainion.IronDoc.Tests.Fakes.Acceptance.UseCase1 Factory()
 Factory method
 
-> ##### Return value
-> an initialized instance of this class
+#### Return value
+an initialized instance of this class

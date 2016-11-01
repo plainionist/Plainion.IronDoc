@@ -9,11 +9,14 @@ module private ReflectionImpl =
     open System.Diagnostics
     open Plainion.IronDoc
 
+    /// <summary>
+    /// Load assembly from byte[] to avoid getting the file locked by our process
+    /// </summary>
     let reflectionOnlyLoad assemblyFile =
-        // Load assembly from byte[] to avoid getting the file locked by our process
-
         let assemblyBytes = File.ReadAllBytes assemblyFile
-        Assembly.ReflectionOnlyLoad assemblyBytes
+        { DAssembly.name = Path.GetFileNameWithoutExtension(assemblyFile)
+          location = Path.GetFullPath(assemblyFile)
+          assembly = Assembly.ReflectionOnlyLoad assemblyBytes }
 
     let getAssemblyLocation ( assemblyName : AssemblyName ) baseDirs =
         let assemblyExtensions = [ ".dll"; ".exe" ]
@@ -46,7 +49,7 @@ module private ReflectionImpl =
                         Debug.WriteLine ( "Failed to load: " + assemblyName.ToString() )
                         null
                 else
-                    reflectionOnlyLoad x
+                    (reflectionOnlyLoad x).assembly
 
     let loadAssembly baseDirs assembly = 
         let newBaseDirs = Path.GetDirectoryName(assembly) :: baseDirs
@@ -77,7 +80,7 @@ module private ReflectionImpl =
         newBaseDirs, reflectionOnlyLoad assembly
     
     type LoadAssemblyMsg = 
-        | LoadAssembly of string * replyChannel : AsyncReplyChannel<Assembly>
+        | LoadAssembly of string * replyChannel : AsyncReplyChannel<DAssembly>
         | Stop 
 
 [<AutoOpen>]
@@ -88,7 +91,7 @@ module ReflectionApi =
 
     // https://kimsereyblog.blogspot.de/2016/07/manage-mutable-state-using-actors-with.html
     type AssemblyLoaderApi = {
-        Load: string -> Assembly
+        Load: string -> DAssembly
         Stop: unit -> unit
     }
 
@@ -111,7 +114,7 @@ module ReflectionApi =
         { Load = fun assembly -> agent.PostAndReply( fun replyChannel -> LoadAssembly( assembly, replyChannel ) )
           Stop = fun () -> agent.Post Stop }
 
-    let rec createDType (t : Type) =
+    let rec createDType assembly (t : Type) =
         // we also want to have protected members
         let bindingFlags = BindingFlags.Instance ||| BindingFlags.Static ||| BindingFlags.DeclaredOnly
 
@@ -121,7 +124,7 @@ module ReflectionApi =
                                   parameterType = x.ParameterType })
             |> List.ofSeq
 
-        { assembly = t.Assembly
+        { assembly = assembly
           nameSpace = t.Namespace
           name = t.Name
           fields =  t.GetFields(bindingFlags) 
@@ -151,6 +154,6 @@ module ReflectionApi =
                     |> List.ofSeq
           nestedTypes = t.GetNestedTypes(bindingFlags) 
                         |> Seq.filter(fun x -> x.IsPublic)
-                        |> Seq.map createDType
+                        |> Seq.map (createDType assembly)
                         |> List.ofSeq
         }

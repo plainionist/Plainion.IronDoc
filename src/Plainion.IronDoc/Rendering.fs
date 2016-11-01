@@ -60,31 +60,27 @@ module private MarkdownImpl =
 
         let headlineMarker = "#".PadLeft((level + 1), '#')
 
-        writer.WriteLine ()
-        writer.WriteLine (headlineMarker + " Syntax")
-
-        // TODO: write syntax again - later in several languages
-
         if memb.Doc.Params.Length > 0 then
             writer.WriteLine ()
-            writer.WriteLine ( headlineMarker + "#" + " Parameters")
+            writer.WriteLine ( headlineMarker + " Parameters")
 
             memb.Doc.Params 
             |> Seq.iter( fun p -> 
                 writer.WriteLine ()
 
-                writer.Write "> **"
+                writer.Write "*"
 
+                // TODO writer.Write p.name
+                writer.Write " : "
                 writer.Write p.cref
 
-                writer.Write ":**  " 
-                writer.Write p.description
-                writer.WriteLine ()
+                writer.WriteLine "*" 
+                writer.WriteLine p.description
             )
 
         if memb.Doc.Returns.Length > 0 then
             writer.WriteLine ()
-            writer.WriteLine (headlineMarker + "#" + " Return value")
+            writer.WriteLine (headlineMarker + " Return value")
 
             memb.Doc.Returns 
             |> Seq.map processInline
@@ -166,19 +162,19 @@ module private MarkdownImpl =
     let processMember (writer:TextWriter) m =
         writer.WriteLine()
 
-        writer.Write "#### "
+        writer.Write "### "
         writer.WriteLine m.Name
 
         writer.WriteLine()
 
-        processMemberDoc writer m 4
+        processMemberDoc writer m 3
 
     let processMembers (writer:TextWriter) (headline : string) allMembers = 
         let members = allMembers |> List.ofSeq
         
         if not ( List.isEmpty members ) then
             writer.WriteLine()
-            writer.Write "### "
+            writer.Write "## "
             writer.WriteLine headline
 
             members
@@ -205,14 +201,14 @@ module Api =
             returnType + " " + m.name + "(" + (getParameterSignature m.parameters)+ ")"
 
         writer.WriteLine()
-        writer.Write "## "
+        writer.Write "# "
         writer.WriteLine( getFullName dtype )
 
         writer.WriteLine("**Namespace:** {0}", dtype.nameSpace)
-        writer.WriteLine("**Assembly:** {0}", dtype.assembly)
+        writer.WriteLine("**Assembly:** {0}", dtype.assembly.name)
 
         processMemberDoc writer { Name = dtype.name
-                                  Doc = MemberType.Type(dtype) |> getDoc } 2
+                                  Doc = MemberType.Type(dtype) |> getDoc } 1
 
         dtype.fields
         |> Seq.map(fun x -> { Name = x.fieldType.FullName + " " + x.name
