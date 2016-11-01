@@ -182,7 +182,7 @@ module Api =
                 
             let getParameterSignature parameters = 
                 parameters
-                |> Seq.map( fun p -> p.parameterType.ToString() )
+                |> Seq.map( fun p -> sprintf "%s %s" (p.parameterType.ToString()) p.name )
                 |> String.concat ","
 
             let getMethodSignature m =

@@ -25,7 +25,7 @@ And here are some remarks
 
 ## Constructors
 
-### Constructor(System.String)
+### Constructor(System.String s)
 
 
 ## Properties
@@ -39,7 +39,7 @@ Accessor for the member S
 
 ## Methods
 
-### void Run(System.String)
+### void Run(System.String s)
 
 Simple member
 
