@@ -124,7 +124,7 @@ module ReflectionApi =
             |> List.ofSeq
 
         { assembly = assembly
-          nameSpace = t.Namespace
+          nameSpace = t.Namespace + (if t.IsNested then "." + t.DeclaringType.Name else String.Empty)
           name = t.Name
           fields =  t.GetFields(bindingFlags) 
                     |> Seq.map(fun x -> { name = x.Name

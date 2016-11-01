@@ -224,7 +224,6 @@ module Api =
 
                 items
                 |> Seq.iter( fun x ->
-                    writer.WriteLine()
                     renderHeadline writer (level+1) (getFullName x)
                     
                     let doc = NestedType(x) |> apiDocLoader.Get dtype
