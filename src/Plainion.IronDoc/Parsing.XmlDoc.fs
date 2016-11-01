@@ -107,7 +107,7 @@ module XmlDocApi =
     }
 
     let apiDocLoader =
-        let agent = MailboxProcessor<GetApiDocMsg>.Start(fun inbox ->
+        let agent = ResilientMailbox<GetApiDocMsg>.Start(fun inbox ->
             let getXmlDoc xmlDocs dtype = 
                 match xmlDocs |> Map.tryFind dtype.assembly.location with
                 | Some d -> xmlDocs, d
@@ -130,5 +130,6 @@ module XmlDocApi =
                     | Stop -> return ()
                 }
             loop Map.empty ) 
+        agent.Error.Add(handleLastChanceException)
         { Get = fun dtype mt -> agent.PostAndReply( fun replyChannel -> Get( dtype, mt, replyChannel ) )
           Stop = fun () -> agent.Post Stop }

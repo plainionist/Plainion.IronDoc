@@ -5,5 +5,8 @@
     <Node Id="fccbec16-87ac-4f10-bc7e-30c7a4eb85f2">
       <Caption><![CDATA[multi file documentation]]></Caption>
     </Node>
+    <Node Id="9317f41e-d07a-45c0-abad-72e3f8200d27">
+      <Caption><![CDATA[avoid PostAndReply]]></Caption>
+    </Node>
   </Node>
 </Tree>

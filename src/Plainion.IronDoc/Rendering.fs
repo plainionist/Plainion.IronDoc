@@ -133,7 +133,7 @@ module private MarkdownImpl =
 module Api =
     open Plainion.IronDoc
 
-    let render (writer : TextWriter) dtype = 
+    let render (writer:TextWriter) dtype = 
         renderTypeHeader writer 1 (dtype, MemberType.Type(dtype) |> apiDocLoader.Get dtype)
 
         let rec renderTypeMembers (writer : TextWriter) level dtype = 

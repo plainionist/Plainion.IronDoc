@@ -25,31 +25,37 @@ module private ReflectionImpl =
         |> List.collect( fun baseDir -> assemblyExtensions |> List.map( fun ext -> Path.Combine(baseDir, assemblyName.Name + ext) ) )
         |> List.tryFind File.Exists
 
-    let resolveReflectionOnlyAssembly ( assemblyName : string ) baseDirs =
+    let resolveReflectionOnlyAssembly (e:ResolveEventArgs) baseDirs =
         let loadedAssembly = 
             AppDomain.CurrentDomain.ReflectionOnlyGetAssemblies ()
-            |> Array.tryFind( fun asm -> String.Equals(asm.FullName, assemblyName, StringComparison.OrdinalIgnoreCase) )
+            |> Array.tryFind( fun asm -> String.Equals(asm.FullName, e.Name, StringComparison.OrdinalIgnoreCase) )
 
         match loadedAssembly with
         | Some x -> x
         | None ->
-            let assemblyName = new AssemblyName( assemblyName )
+            let assemblyName = new AssemblyName( e.Name )
             let dependentAssemblyPath = baseDirs |> getAssemblyLocation assemblyName
+            
+            Debugger.Launch() |> ignore
+            printfn ":: %A" assemblyName
+
+            let tryLoadFromGAC () =
+                try
+                    // e.g. .NET assemblies, assemblies from GAC
+                    Assembly.ReflectionOnlyLoad e.Name
+                with
+                | _ -> 
+                    // ignore exception here - e.g. System.Windows.Interactivity - app will work without
+                    Debug.WriteLine ( "Failed to load: " + assemblyName.ToString() )
+                    null
 
             match dependentAssemblyPath with
-            | None -> null
+            | None -> tryLoadFromGAC()
             | Some x -> 
-                if not ( File.Exists x ) then
-                    try
-                        // e.g. .NET assemblies, assemblies from GAC
-                        Assembly.ReflectionOnlyLoad assemblyName.Name
-                    with
-                    | _ -> 
-                        // ignore exception here - e.g. System.Windows.Interactivity - app will work without
-                        Debug.WriteLine ( "Failed to load: " + assemblyName.ToString() )
-                        null
-                else
+                if File.Exists x then
                     (reflectionOnlyLoad x).assembly
+                else
+                    tryLoadFromGAC()
 
     let loadAssembly baseDirs assembly = 
         let newBaseDirs = Path.GetDirectoryName(assembly) :: baseDirs
@@ -65,7 +71,7 @@ module private ReflectionImpl =
             | None -> null )
 
         let onReflectionOnlyAssemblyResolve = System.ResolveEventHandler( fun _ e ->
-            newBaseDirs |> resolveReflectionOnlyAssembly e.Name )
+            newBaseDirs |> resolveReflectionOnlyAssembly e )
 
         let register () =
             AppDomain.CurrentDomain.add_AssemblyResolve onAssemblyResolve
@@ -77,7 +83,13 @@ module private ReflectionImpl =
 
         use g = new Guard( register, unregister )
 
-        newBaseDirs, reflectionOnlyLoad assembly
+        let assembly = reflectionOnlyLoad assembly
+
+        // we need to get all types here while we still have the "resolve" handlers attached
+        // if we do not do so we ll fail later getting all types
+        assembly.assembly.GetTypes() |> ignore
+
+        newBaseDirs, assembly
     
     type LoadAssemblyMsg = 
         | LoadAssembly of string * replyChannel : AsyncReplyChannel<DAssembly>
@@ -96,7 +108,7 @@ module ReflectionApi =
     }
 
     let assemblyLoader =
-        let agent = MailboxProcessor<LoadAssemblyMsg>.Start(fun inbox ->
+        let agent = ResilientMailbox<LoadAssemblyMsg>.Start(fun inbox ->
             let rec loop baseDirs =
                 async {
                     let! msg = inbox.Receive()
@@ -111,6 +123,7 @@ module ReflectionApi =
                     | Stop -> return ()
                 }
             loop [ AppDomain.CurrentDomain.BaseDirectory ] ) 
+        agent.Error.Add(handleLastChanceException)
         { Load = fun assembly -> agent.PostAndReply( fun replyChannel -> LoadAssembly( assembly, replyChannel ) )
           Stop = fun () -> agent.Post Stop }
 

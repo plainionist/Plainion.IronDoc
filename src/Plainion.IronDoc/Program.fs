@@ -71,8 +71,8 @@ let main argv =
         usage ()
         0
     | Some x ->
-        printf "Generating documentation to: %s" x.output
+        printfn "Generating documentation to: %s" x.output
 
-        Workflows.generateAssemblyFileDoc x.assembly x.output
+        Workflows.generateAssemblyFileDoc x.output x.assembly
 
         0
