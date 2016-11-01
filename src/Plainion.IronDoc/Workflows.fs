@@ -11,17 +11,12 @@ let generateTypeDoc writer t =
     render writer t
     
 let generateAssemblyDoc outputFolder (assembly:DAssembly) = 
-    let newDir dir =
-        if Directory.Exists dir then 
-            Directory.Delete(dir, true)
-
-        Directory.CreateDirectory(dir) |> ignore
-
-    newDir outputFolder
-
     let assemblyFolder = Path.Combine(outputFolder, assembly.name)
 
-    newDir assemblyFolder
+    if Directory.Exists assemblyFolder then 
+        Directory.Delete(assemblyFolder, true)
+
+    Directory.CreateDirectory(assemblyFolder) |> ignore
     
     let renderType dtype =
         use writer = new StreamWriter(Path.Combine(assemblyFolder, (getFullName dtype) + ".md"))
