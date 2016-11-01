@@ -4,16 +4,21 @@ namespace Plainion.IronDoc.Tests.Fakes.Acceptance
     /// <summary>
     /// This is use case number one.
     /// <para>A dedicated paragraph</para>
+    /// 
+    /// <seealso cref="System.IO.TextWriter"/>
     /// </summary>
     /// <remarks>
     /// And here are some remarks
     /// </remarks>
     public class UseCase1
     {
+        public static readonly UseCase1 Empty = new UseCase1();
+
         /// <summary>
-        /// Creates default intance of this use case
+        /// Creates default intance of this use case.
+        /// Use <see cref="Factory"/> to call it from outside.
         /// </summary>
-        public UseCase1() { }
+        protected UseCase1() { }
 
         // remain undocumented!
         public UseCase1( string s ) { }

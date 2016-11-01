@@ -1,4 +1,9 @@
 ﻿// generating Markdown API doc
+// 
+// general approach: we render 
+// - all public/protected types and members 
+// - only the given documentation per member. If e.g. no "see also" tags given this section will also not be rendered
+//   as it would anyway not give any value
 namespace Plainion.IronDoc.Rendering
 
 open System.IO
@@ -13,16 +18,21 @@ module private MarkdownImpl =
     type Member = { Name : string
                     Doc : ApiDoc }
 
-    let processText txt =
-        normalizeSpace txt  
-
     let nl = Environment.NewLine
 
-    let processSeeAlso (cref:string) =
-        sprintf "%s> *See also: %s" nl cref
+    let ifNotEmpty (seq,f) =
+        match Seq.isEmpty seq with
+        | true -> ()
+        | false -> f seq
+
+    let (>>=) m f = ifNotEmpty(m,f)
+
+    let processText txt =
+        // TODO: insert NewLine after e.g. 100 characters
+        normalizeSpace txt  
 
     let processSee (cref:string) =
-        sprintf "*See:* %s" cref
+        sprintf "*See:* %s" (cref.Trim())
 
     let processParameterRef (name:string) =
         sprintf "*%s*" name
@@ -31,13 +41,13 @@ module private MarkdownImpl =
         sprintf "_%s_" name
 
     let processC (str:string) =
-        sprintf "`%s`" str
+        sprintf "`%s`" (str.Trim())
 
-    let processCode str =
-        sprintf "%s```%s%s%s```%s" nl nl ( normalizeSpace str ) nl nl
+    let processCode (str:string) =
+        sprintf "%s```%s%s%s```%s" nl nl (str.Trim()) nl nl
 
     let processPara (str:string) =
-        sprintf "%s%s%s" nl str nl
+        sprintf "%s%s%s" nl (processText str) nl
 
     let processInline inl =
         match inl with
@@ -53,97 +63,57 @@ module private MarkdownImpl =
                    processSee cref
         | SeeAlso x -> String.Empty // ignore here - will be processed later
 
-    let processMemberDoc (writer:TextWriter) (memb:Member) (level :int) = 
-        memb.Doc.Summary 
+    let processInlines (writer:TextWriter) (items:Inline list) =
+        writer.WriteLine ()
+
+        items
         |> Seq.map processInline
-        |> Seq.iter writer.WriteLine
+        |> Seq.iter(fun x -> x.TrimEnd() >>= writer.WriteLine)
+    
+    let renderHeadline (writer:TextWriter) headlineMarker headline =
+        writer.WriteLine ()
+        writer.WriteLine ( headlineMarker + " " + headline)
 
-        let headlineMarker = "#".PadLeft((level + 1), '#')
-
-        if memb.Doc.Params.Length > 0 then
+    let renderCRefDescriptions (writer:TextWriter) items =
+        items 
+        |> Seq.iter( fun x -> 
             writer.WriteLine ()
-            writer.WriteLine ( headlineMarker + " Parameters")
 
-            memb.Doc.Params 
-            |> Seq.iter( fun p -> 
-                writer.WriteLine ()
+            let (CRef crefValue) = x.cref
+            let cref = substringAfter crefValue ':' 
+            writer.WriteLine("*{0}*", cref)
+            writer.WriteLine x.description
+        )
 
-                writer.Write "*"
+    let processParameters (writer:TextWriter) headline (items:CRefDescription list) =
+        headline "Parameters"
+        items |> renderCRefDescriptions writer
 
-                // TODO writer.Write p.name
-                writer.Write " : "
-                writer.Write p.cref
+    let processReturns (writer:TextWriter) headline (items:Inline list) =
+        headline "Return value"
+        items |> processInlines writer 
 
-                writer.WriteLine "*" 
-                writer.WriteLine p.description
-            )
+    let processExceptions (writer:TextWriter) headline (items:CRefDescription list) =
+        headline "Exceptions"
+        items |> renderCRefDescriptions writer
 
-        if memb.Doc.Returns.Length > 0 then
-            writer.WriteLine ()
-            writer.WriteLine (headlineMarker + " Return value")
+    let processRemarks (writer:TextWriter) headline (items:Inline list) =
+        headline "Remarks"
+        items |> processInlines writer 
 
-            memb.Doc.Returns 
-            |> Seq.map processInline
-            |> Seq.iter writer.WriteLine
+    let processExample (writer:TextWriter) headline (items:Inline list) =
+        headline "Example"
+        items |> processInlines writer 
 
-        if memb.Doc.Exceptions.Length > 0 then
-            writer.WriteLine();
-            writer.WriteLine("> " + headlineMarker + " Exceptions");
+    let processPermissions (writer:TextWriter) headline (items:CRefDescription list) =
+        headline "Permissions"
+        items |> renderCRefDescriptions writer
 
-            memb.Doc.Exceptions
-            |> Seq.iter( fun ex -> 
-                writer.WriteLine ()
-
-                writer.Write "**"
-
-                let (CRef crefValue) = ex.cref
-                let cref = substringAfter crefValue ':' 
-                writer.Write cref
-
-                writer.WriteLine "**"
-                writer.Write ex.description
-                writer.WriteLine ()
-            )
-
-        if memb.Doc.Remarks.Length > 0 then
-            writer.WriteLine ()
-            writer.WriteLine (headlineMarker + " Remarks")
-
-            memb.Doc.Remarks 
-            |> Seq.map processInline
-            |> Seq.iter writer.WriteLine
-
-        if memb.Doc.Example.Length > 0 then
-            writer.WriteLine ()
-            writer.WriteLine (headlineMarker + " Example")
-
-            memb.Doc.Example 
-            |> Seq.map processInline
-            |> Seq.iter writer.WriteLine
-
-        if memb.Doc.Permissions.Length > 0 then
-            writer.WriteLine();
-            writer.WriteLine(headlineMarker + " Permissions");
-
-            memb.Doc.Exceptions
-            |> Seq.iter( fun ex -> 
-                writer.WriteLine ()
-
-                writer.Write "**"
-
-                let (CRef crefValue) = ex.cref
-                let cref = substringAfter crefValue ':' 
-                writer.Write cref
-
-                writer.WriteLine "**"
-                writer.Write ex.description
-                writer.WriteLine ()
-            )
-
-        let seeAlso = [ memb.Doc.Summary
-                        memb.Doc.Remarks
-                        memb.Doc.Returns
-                        memb.Doc.Example
+    let processSeeAlso (writer:TextWriter) headline (doc:ApiDoc) =
+        let seeAlso = [ doc.Summary
+                        doc.Remarks
+                        doc.Returns
+                        doc.Example
                       ]
                       |> Seq.concat
                       |> Seq.choose(fun x -> match x with
@@ -153,32 +123,49 @@ module private MarkdownImpl =
                       |> List.ofSeq
 
         if seeAlso.Length > 0 then
-            writer.WriteLine ()
-            writer.WriteLine (headlineMarker + " See also")
+            headline "See also"
 
             seeAlso 
-            |> Seq.iter writer.WriteLine
+            |> Seq.iter(fun x -> 
+                writer.WriteLine ()
+    
+                let (CRef crefValue) = x
+                let cref = substringAfter crefValue ':' 
+                writer.WriteLine("* " + cref)
+            )
+
+    let processMemberDoc (writer:TextWriter) doc headline = 
+        doc.Summary >>= processInlines writer 
+
+        doc.Params >>= processParameters writer headline
+        doc.Returns >>= processReturns writer headline
+        doc.Exceptions >>= processExceptions writer headline
+        doc.Remarks >>= processRemarks writer headline
+        doc.Example >>= processExample writer headline
+        doc.Permissions >>= processPermissions writer headline
+
+        doc |> processSeeAlso writer headline
                   
-    let processMember (writer:TextWriter) m =
+    let renderMembers (writer:TextWriter) (headline : string) members = 
         writer.WriteLine()
+        renderHeadline writer "##" headline
 
-        writer.Write "### "
-        writer.WriteLine m.Name
+        members
+        |> Seq.iter(fun m ->
+            renderHeadline writer "###" m.Name
+
+            processMemberDoc writer m.Doc (renderHeadline writer "####")
+        )
+
+    let renderTypeHeader (writer:TextWriter) (dtype,doc) =
+        renderHeadline writer "#" ( getFullName dtype )
 
         writer.WriteLine()
+        writer.WriteLine("**Namespace:** {0}", dtype.nameSpace)
+        writer.WriteLine()
+        writer.WriteLine("**Assembly:** {0}", dtype.assembly.name)
 
-        processMemberDoc writer m 3
-
-    let processMembers (writer:TextWriter) (headline : string) allMembers = 
-        let members = allMembers |> List.ofSeq
-        
-        if not ( List.isEmpty members ) then
-            writer.WriteLine()
-            writer.Write "## "
-            writer.WriteLine headline
-
-            members
-            |> Seq.iter(fun m -> processMember writer m)
+        processMemberDoc writer doc (renderHeadline writer "##")
 
 [<AutoOpen>]
 module Api =
@@ -200,40 +187,32 @@ module Api =
 
             returnType + " " + m.name + "(" + (getParameterSignature m.parameters)+ ")"
 
-        writer.WriteLine()
-        writer.Write "# "
-        writer.WriteLine( getFullName dtype )
-
-        writer.WriteLine("**Namespace:** {0}", dtype.nameSpace)
-        writer.WriteLine("**Assembly:** {0}", dtype.assembly.name)
-
-        processMemberDoc writer { Name = dtype.name
-                                  Doc = MemberType.Type(dtype) |> getDoc } 1
+        renderTypeHeader writer (dtype, MemberType.Type(dtype) |> getDoc)
 
         dtype.fields
-        |> Seq.map(fun x -> { Name = x.fieldType.FullName + " " + x.name
-                              Doc = Field(x) |> getDoc } )
-        |> processMembers writer "Fields"
+        |> List.map(fun x -> { Name = x.fieldType.FullName + " " + x.name
+                               Doc = Field(x) |> getDoc } )
+        >>= renderMembers writer "Fields"
 
         dtype.constructors
-        |> Seq.map(fun x -> { Name = "Constructor(" + (getParameterSignature x.parameters) + ")"
-                              Doc = Constructor(x) |> getDoc } )
-        |> processMembers writer "Constructors" 
+        |> List.map(fun x -> { Name = "Constructor(" + (getParameterSignature x.parameters) + ")"
+                               Doc = Constructor(x) |> getDoc } )
+        >>= renderMembers writer "Constructors" 
 
         dtype.properties 
-        |> Seq.map(fun x -> { Name = x.propertyType.FullName + " " + x.name
-                              Doc = Property(x) |> getDoc } )
-        |> processMembers writer "Properties" 
+        |> List.map(fun x -> { Name = x.propertyType.FullName + " " + x.name
+                               Doc = Property(x) |> getDoc } )
+        >>= renderMembers writer "Properties" 
     
         dtype.events
-        |> Seq.map(fun x -> { Name = x.eventHandlerType.FullName + " " + x.name
-                              Doc = Event(x) |> getDoc } )
-        |> processMembers writer "Events" 
+        |> List.map(fun x -> { Name = x.eventHandlerType.FullName + " " + x.name
+                               Doc = Event(x) |> getDoc } )
+        >>= renderMembers writer "Events" 
 
         dtype.methods
-        |> Seq.map(fun x -> { Name = getMethodSignature x
-                              Doc = Method(x) |> getDoc } ) 
-        |> processMembers writer "Methods" 
+        |> List.map(fun x -> { Name = getMethodSignature x
+                               Doc = Method(x) |> getDoc } ) 
+        >>= renderMembers writer "Methods" 
 
     //    processMembers
     //        ctx 
