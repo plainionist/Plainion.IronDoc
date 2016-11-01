@@ -15,6 +15,13 @@ type internal OverwrittenMethods() =
     override this.ToString() =
         "silence"
 
+type internal InternalMembers() =
+    /// <summary>
+    /// HIDDEN
+    /// </summary>
+    member internal this.X =
+        "silence"
+
 // test specific scenarios - parsing + rendering
 [<TestFixture>]
 module ParsingTests =
@@ -37,3 +44,17 @@ Returns nicely formatted message about the state of this object""" )
 ### Plainion.IronDoc.Tests.Fakes.Scenarios.NestingType.Nested
 
 I am nested""" )
+
+    [<Test>]
+    let ``Internal members are NOT rendered``() =
+        let markdownDocument = renderApiDoc typedefof<InternalMembers>
+
+        Assert.That( markdownDocument, Does.Not.Contain "HIDDEN" )
+
+    [<Test>]
+    let ``Protected members are rendered``() =
+        let markdownDocument = renderApiDoc typedefof<Scenarios.ProtectedMembers>
+
+        Assert.That( markdownDocument, Does.Contain """### void RunCore()
+
+Protected API to be rendered""" )

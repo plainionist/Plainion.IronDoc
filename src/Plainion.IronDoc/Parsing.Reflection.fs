@@ -115,7 +115,8 @@ module ReflectionApi =
           Stop = fun () -> agent.Post Stop }
 
     let rec createDType assembly (t : Type) =
-        let bindingFlags = BindingFlags.Instance ||| BindingFlags.Static ||| BindingFlags.DeclaredOnly ||| BindingFlags.Public
+        // we also want to have protected members
+        let bindingFlags = BindingFlags.Instance ||| BindingFlags.Static ||| BindingFlags.DeclaredOnly ||| BindingFlags.Public ||| BindingFlags.NonPublic
 
         let getParameters (memberInfo : MemberInfo) = 
             (memberInfo :?> MethodBase).GetParameters()
@@ -127,27 +128,33 @@ module ReflectionApi =
           nameSpace = t.Namespace + (if t.IsNested then "." + t.DeclaringType.Name else String.Empty)
           name = t.Name
           fields =  t.GetFields(bindingFlags) 
+                    |> Seq.filter(fun x -> not (x.IsPrivate || x.IsAssembly))
                     |> Seq.map(fun x -> { name = x.Name
                                           fieldType = x.FieldType })
                     |> List.ofSeq
           constructors = t.GetConstructors(bindingFlags) 
+                         |> Seq.filter(fun x -> not (x.IsPrivate || x.IsAssembly))
                          |> Seq.map(fun x -> { Constructor.parameters = getParameters x })
                          |> List.ofSeq
           properties = t.GetProperties(bindingFlags) 
+                       |> Seq.filter(fun x -> not (x.GetMethod.IsPrivate || x.GetMethod.IsAssembly))
                        |> Seq.map(fun x -> { name = x.Name
                                              propertyType = x.PropertyType })
                        |> List.ofSeq
           events = t.GetEvents(bindingFlags) 
+                   |> Seq.filter(fun x -> not (x.AddMethod.IsPrivate || x.AddMethod.IsAssembly))
                    |> Seq.map(fun x -> { name = x.Name
                                          eventHandlerType = x.EventHandlerType})
                    |> List.ofSeq
           methods = t.GetMethods(bindingFlags) 
+                    |> Seq.filter(fun x -> not (x.IsPrivate || x.IsAssembly))
                     |> Seq.filter(fun x -> not (x.IsSpecialName))
                     |> Seq.map(fun x -> { name = x.Name
                                           parameters = getParameters x
                                           returnType = x.ReturnType})
                     |> List.ofSeq
           nestedTypes = t.GetNestedTypes(bindingFlags) 
+                        |> Seq.filter(fun x -> not (x.IsNestedPrivate || x.IsNestedAssembly))
                         |> Seq.map (createDType assembly)
                         |> List.ofSeq
         }

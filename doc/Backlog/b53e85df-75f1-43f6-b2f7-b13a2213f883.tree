@@ -2,15 +2,6 @@
 <Tree>
   <Node Id="b53e85df-75f1-43f6-b2f7-b13a2213f883">
     <Caption><![CDATA[Planning]]></Caption>
-    <Node Id="e4969cd3-28c5-4e73-a233-cf2810a2fc94">
-      <Caption><![CDATA[Write some acceptance tests]]></Caption>
-      <Node Id="0e5f4c1a-3355-464a-a494-9f73db868b44">
-        <Caption><![CDATA[test protected members]]></Caption>
-      </Node>
-      <Node Id="ca542cd1-7f64-41a5-a3b6-d34ed09df401">
-        <Caption><![CDATA[test internal members]]></Caption>
-      </Node>
-    </Node>
     <Node Id="fccbec16-87ac-4f10-bc7e-30c7a4eb85f2">
       <Caption><![CDATA[multi file documentation]]></Caption>
     </Node>

@@ -18,7 +18,7 @@ namespace Plainion.IronDoc.Tests.Fakes.Acceptance
         /// Creates default intance of this use case.
         /// Use <see cref="Factory"/> to call it from outside.
         /// </summary>
-        protected UseCase1() { }
+        private UseCase1() { }
 
         // remain undocumented!
         public UseCase1( string s ) { }

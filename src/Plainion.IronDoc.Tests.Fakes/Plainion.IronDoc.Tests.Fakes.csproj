@@ -27,6 +27,7 @@
     <Compile Include="Acceptance\UseCase1.cs" />
     <Compile Include="Scenarios\NestedType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Scenarios\ProtectedMembers.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Acceptance\UseCase1.md">
