@@ -15,11 +15,6 @@ module private MarkdownImpl =
     open System.Xml.Linq
     open Plainion.IronDoc
 
-    type Member = { Name : string
-                    Doc : ApiDoc }
-
-    let nl = Environment.NewLine
-
     let ifNotEmpty (seq,f) =
         match Seq.isEmpty seq with
         | true -> ()
@@ -28,6 +23,8 @@ module private MarkdownImpl =
     let (>>=) m f = ifNotEmpty(m,f)
 
     let renderInline inl =
+        let nl = Environment.NewLine
+    
         let renderText txt =
             // TODO: insert NewLine after e.g. 100 characters
             normalizeSpace txt         
@@ -111,15 +108,15 @@ module private MarkdownImpl =
 
         doc |> renderSeeAlso writer headline
                   
-    let renderMembersOfKind (writer:TextWriter) (headline : string) level members = 
+    let renderMembersOfKind (writer:TextWriter) level (headline : string) members = 
         writer.WriteLine()
         renderHeadline writer level headline
 
         members
-        |> Seq.iter(fun m ->
-            renderHeadline writer (level+1) m.Name
+        |> Seq.iter(fun (name,doc) ->
+            renderHeadline writer (level+1) name
 
-            renderApiDoc writer m.Doc (renderHeadline writer (level+2))
+            renderApiDoc writer doc (renderHeadline writer (level+2))
         )
 
     let renderTypeHeader (writer:TextWriter) level (dtype,doc) =
@@ -155,30 +152,27 @@ module Api =
 
                 returnType + " " + m.name + "(" + (getParameterSignature m.parameters)+ ")"
 
+            let renderMembers = renderMembersOfKind writer level
+
             dtype.fields
-            |> List.map(fun x -> { Name = x.fieldType.FullName + " " + x.name
-                                   Doc = Field(x) |> getDoc } )
-            >>= renderMembersOfKind writer "Fields" level
+            |> List.map(fun x -> x.fieldType.FullName + " " + x.name, Field(x) |> getDoc )
+            >>= renderMembers "Fields" 
 
             dtype.constructors
-            |> List.map(fun x -> { Name = "Constructor(" + (getParameterSignature x.parameters) + ")"
-                                   Doc = Constructor(x) |> getDoc } )
-            >>= renderMembersOfKind writer "Constructors" level
+            |> List.map(fun x -> "Constructor(" + (getParameterSignature x.parameters) + ")", Constructor(x) |> getDoc )
+            >>= renderMembers "Constructors"
 
             dtype.properties 
-            |> List.map(fun x -> { Name = x.propertyType.FullName + " " + x.name
-                                   Doc = Property(x) |> getDoc } )
-            >>= renderMembersOfKind writer "Properties" level
+            |> List.map(fun x -> x.propertyType.FullName + " " + x.name, Property(x) |> getDoc)
+            >>= renderMembers "Properties"
     
             dtype.events
-            |> List.map(fun x -> { Name = x.eventHandlerType.FullName + " " + x.name
-                                   Doc = Event(x) |> getDoc } )
-            >>= renderMembersOfKind writer "Events" level
+            |> List.map(fun x -> x.eventHandlerType.FullName + " " + x.name, Event(x) |> getDoc )
+            >>= renderMembers "Events"
 
             dtype.methods
-            |> List.map(fun x -> { Name = getMethodSignature x
-                                   Doc = Method(x) |> getDoc } ) 
-            >>= renderMembersOfKind writer "Methods" level
+            |> List.map(fun x -> getMethodSignature x, Method(x) |> getDoc ) 
+            >>= renderMembers "Methods"
 
             let renderNestedTypes items =
                 writer.WriteLine()
