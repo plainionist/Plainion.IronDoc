@@ -5,15 +5,6 @@
     <Node Id="e4969cd3-28c5-4e73-a233-cf2810a2fc94">
       <Caption><![CDATA[Write some acceptance tests]]></Caption>
     </Node>
-    <Node Id="275a9948-5342-4e6c-89a8-8e61d0724e3c">
-      <Caption><![CDATA[create a model]]></Caption>
-    </Node>
-    <Node Id="ec81c555-6b5b-4203-9a21-3980102c8ac0">
-      <Caption><![CDATA[Modules instead of classes]]></Caption>
-      <Node Id="fdcbe851-858e-45c8-9e48-d233d0e40b0e">
-        <Caption><![CDATA[AssemblyLoader as MailboxProcessor]]></Caption>
-      </Node>
-    </Node>
     <Node Id="fccbec16-87ac-4f10-bc7e-30c7a4eb85f2">
       <Caption><![CDATA[multi file documentation]]></Caption>
     </Node>

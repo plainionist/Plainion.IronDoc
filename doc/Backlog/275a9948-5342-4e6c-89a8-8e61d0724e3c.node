@@ -1,5 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Node Id="275a9948-5342-4e6c-89a8-8e61d0724e3c" Created="636097180232954515" LastModified="636097180577474220">
-  <Caption><![CDATA[create a model]]></Caption>
-  <Content><![CDATA[- add types for each type of doc instead of writing MD directly]]></Content>
-</Node>
