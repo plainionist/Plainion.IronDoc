@@ -70,9 +70,12 @@ module private MarkdownImpl =
         |> Seq.map processInline
         |> Seq.iter(fun x -> x.TrimEnd() >>= writer.WriteLine)
     
-    let renderHeadline (writer:TextWriter) headlineMarker headline =
+    let renderHeadline (writer:TextWriter) level headline =
         writer.WriteLine ()
-        writer.WriteLine ( headlineMarker + " " + headline)
+
+        let marker = String.Empty.PadRight(level,'#')
+
+        writer.WriteLine ( marker + " " + headline)
 
     let renderCRefDescriptions (writer:TextWriter) items =
         items 
@@ -134,7 +137,7 @@ module private MarkdownImpl =
                 writer.WriteLine("* " + cref)
             )
 
-    let processMemberDoc (writer:TextWriter) doc headline = 
+    let renderApiDoc (writer:TextWriter) doc headline = 
         doc.Summary >>= processInlines writer 
 
         doc.Params >>= processParameters writer headline
@@ -146,78 +149,90 @@ module private MarkdownImpl =
 
         doc |> processSeeAlso writer headline
                   
-    let renderMembers (writer:TextWriter) (headline : string) members = 
+    let renderMembersOfKind (writer:TextWriter) (headline : string) level members = 
         writer.WriteLine()
-        renderHeadline writer "##" headline
+        renderHeadline writer level headline
 
         members
         |> Seq.iter(fun m ->
-            renderHeadline writer "###" m.Name
+            renderHeadline writer (level+1) m.Name
 
-            processMemberDoc writer m.Doc (renderHeadline writer "####")
+            renderApiDoc writer m.Doc (renderHeadline writer (level+2))
         )
 
-    let renderTypeHeader (writer:TextWriter) (dtype,doc) =
-        renderHeadline writer "#" ( getFullName dtype )
+    let renderTypeHeader (writer:TextWriter) level (dtype,doc) =
+        renderHeadline writer level ( getFullName dtype )
 
         writer.WriteLine()
         writer.WriteLine("**Namespace:** {0}", dtype.nameSpace)
         writer.WriteLine()
         writer.WriteLine("**Assembly:** {0}", dtype.assembly.name)
 
-        processMemberDoc writer doc (renderHeadline writer "##")
+        renderApiDoc writer doc (renderHeadline writer (level+1))
 
 [<AutoOpen>]
 module Api =
     open Plainion.IronDoc
 
     let render (writer : TextWriter) dtype = 
-        let getDoc = apiDocLoader.Get dtype
+        renderTypeHeader writer 1 (dtype, MemberType.Type(dtype) |> apiDocLoader.Get dtype)
+
+        let rec renderTypeMembers (writer : TextWriter) level dtype = 
+            let getDoc = apiDocLoader.Get dtype
                 
-        let getParameterSignature parameters = 
-            parameters
-            |> Seq.map( fun p -> p.parameterType.ToString() )
-            |> String.concat ","
+            let getParameterSignature parameters = 
+                parameters
+                |> Seq.map( fun p -> p.parameterType.ToString() )
+                |> String.concat ","
 
-        let getMethodSignature m =
-            let returnType =
-                match m.returnType with 
-                | t when t = typeof<System.Void> -> "void" 
-                | _ -> m.returnType.FullName
+            let getMethodSignature m =
+                let returnType =
+                    match m.returnType with 
+                    | t when t = typeof<System.Void> -> "void" 
+                    | _ -> m.returnType.FullName
 
-            returnType + " " + m.name + "(" + (getParameterSignature m.parameters)+ ")"
+                returnType + " " + m.name + "(" + (getParameterSignature m.parameters)+ ")"
 
-        renderTypeHeader writer (dtype, MemberType.Type(dtype) |> getDoc)
+            dtype.fields
+            |> List.map(fun x -> { Name = x.fieldType.FullName + " " + x.name
+                                   Doc = Field(x) |> getDoc } )
+            >>= renderMembersOfKind writer "Fields" level
 
-        dtype.fields
-        |> List.map(fun x -> { Name = x.fieldType.FullName + " " + x.name
-                               Doc = Field(x) |> getDoc } )
-        >>= renderMembers writer "Fields"
+            dtype.constructors
+            |> List.map(fun x -> { Name = "Constructor(" + (getParameterSignature x.parameters) + ")"
+                                   Doc = Constructor(x) |> getDoc } )
+            >>= renderMembersOfKind writer "Constructors" level
 
-        dtype.constructors
-        |> List.map(fun x -> { Name = "Constructor(" + (getParameterSignature x.parameters) + ")"
-                               Doc = Constructor(x) |> getDoc } )
-        >>= renderMembers writer "Constructors" 
-
-        dtype.properties 
-        |> List.map(fun x -> { Name = x.propertyType.FullName + " " + x.name
-                               Doc = Property(x) |> getDoc } )
-        >>= renderMembers writer "Properties" 
+            dtype.properties 
+            |> List.map(fun x -> { Name = x.propertyType.FullName + " " + x.name
+                                   Doc = Property(x) |> getDoc } )
+            >>= renderMembersOfKind writer "Properties" level
     
-        dtype.events
-        |> List.map(fun x -> { Name = x.eventHandlerType.FullName + " " + x.name
-                               Doc = Event(x) |> getDoc } )
-        >>= renderMembers writer "Events" 
+            dtype.events
+            |> List.map(fun x -> { Name = x.eventHandlerType.FullName + " " + x.name
+                                   Doc = Event(x) |> getDoc } )
+            >>= renderMembersOfKind writer "Events" level
 
-        dtype.methods
-        |> List.map(fun x -> { Name = getMethodSignature x
-                               Doc = Method(x) |> getDoc } ) 
-        >>= renderMembers writer "Methods" 
+            dtype.methods
+            |> List.map(fun x -> { Name = getMethodSignature x
+                                   Doc = Method(x) |> getDoc } ) 
+            >>= renderMembersOfKind writer "Methods" level
 
-    //    processMembers
-    //        ctx 
-    //        "Nested Types" 
-    //        ( dtype.NestedTypes
-    //          |> Seq.map(fun x -> { Name = getMethodSignature x
-    //                                Doc = declaringTypeFullName + "." + x.name + getMethodParameterSignature mi |> sprintf "M:%s" |> getDoc } ) )
-    //
+            let renderNestedTypes items =
+                writer.WriteLine()
+                renderHeadline writer level "Nested types"
+
+                items
+                |> Seq.iter( fun x ->
+                    writer.WriteLine()
+                    renderHeadline writer (level+1) (getFullName x)
+                    
+                    let doc = NestedType(x) |> apiDocLoader.Get dtype
+                    renderApiDoc writer doc (renderHeadline writer (level+2))
+                    
+                    x |> renderTypeMembers writer (level+2)
+                )
+
+            dtype.nestedTypes >>= renderNestedTypes
+
+        renderTypeMembers writer 2 dtype

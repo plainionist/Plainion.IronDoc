@@ -15,25 +15,35 @@ type internal OverwrittenMethods() =
     override this.ToString() =
         "silence"
 
+/// <summary>
+/// This is a summary
+/// </summary>
+/// <remarks>
+/// And here are some remarks
+/// </remarks>
+type internal SimplePublicClass() = class end
+
 // test specific scenarios - parsing + rendering
 [<TestFixture>]
 module ParsingTests =
     open Plainion.IronDoc.Parsing
     
     [<Test>]
+    let ``Simple class summary rendered`` () = 
+        let markdownDocument = renderApiDoc typedefof<SimplePublicClass>
+
+        // TODO: to unspecific
+        Assert.That( markdownDocument, Does.Contain "This is a summary" )
+
+    [<Test>]
     let ``Overwritten method is rendered``() =
         let markdownDocument = renderApiDoc typedefof<OverwrittenMethods>
 
-        Assert.That( markdownDocument, Does.Contain """### System.String ToString()
-
-Returns nicely formatted message about the state of this object""" )
+        Assert.That( markdownDocument, Does.Contain @"Returns nicely formatted message about the state of this object" )
 
     [<Test>]
     let ``Nested type summary is rendered``() =
-        let markdownDocument = renderApiDoc typedefof<Scenarios.NestingType>
+        let markdownDocument = renderApiDoc typedefof<Scenarios.NestedType.Nested>
 
-        Assert.That( markdownDocument, Does.Contain """## Nested types
-
-### Plainion.IronDoc.Tests.Fakes.Scenarios.NestingType.Nested
-
-I am nested""" )
+        // TODO: to unspecific
+        Assert.That( markdownDocument, Does.Contain @"I am nested" )

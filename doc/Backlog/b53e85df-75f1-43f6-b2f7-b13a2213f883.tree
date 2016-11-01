@@ -14,8 +14,5 @@
     <Node Id="fccbec16-87ac-4f10-bc7e-30c7a4eb85f2">
       <Caption><![CDATA[multi file documentation]]></Caption>
     </Node>
-    <Node Id="00fb1419-3313-4a9b-975c-ae22c13c37e7">
-      <Caption><![CDATA[nested types not rendered]]></Caption>
-    </Node>
   </Node>
 </Tree>

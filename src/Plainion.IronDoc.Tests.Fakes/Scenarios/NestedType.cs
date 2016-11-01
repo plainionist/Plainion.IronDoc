@@ -1,7 +1,7 @@
 ﻿
 namespace Plainion.IronDoc.Tests.Fakes.Scenarios
 {
-    public class NestedType
+    public class NestingType
     {
         /// <summary>
         /// I am nested
