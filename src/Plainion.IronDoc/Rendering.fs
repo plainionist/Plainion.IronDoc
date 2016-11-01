@@ -27,49 +27,24 @@ module private MarkdownImpl =
 
     let (>>=) m f = ifNotEmpty(m,f)
 
-    let processText txt =
-        // TODO: insert NewLine after e.g. 100 characters
-        normalizeSpace txt  
+    let renderInline inl =
+        let renderText txt =
+            // TODO: insert NewLine after e.g. 100 characters
+            normalizeSpace txt         
 
-    let processSee (cref:string) =
-        sprintf "*See:* %s" (cref.Trim())
-
-    let processParameterRef (name:string) =
-        sprintf "*%s*" name
-
-    let processTypeParameterRef (name:string) =
-        sprintf "_%s_" name
-
-    let processC (str:string) =
-        sprintf "`%s`" (str.Trim())
-
-    let processCode (str:string) =
-        sprintf "%s```%s%s%s```%s" nl nl (str.Trim()) nl nl
-
-    let processPara (str:string) =
-        sprintf "%s%s%s" nl (processText str) nl
-
-    let processInline inl =
         match inl with
-        | Text x -> processText x
-        | C x -> processC x  
-        | Code x -> processCode x  
-        | Para x -> processPara x  
+        | Text x -> renderText x
+        | C x -> sprintf "`%s`" (x.Trim())  
+        | Code x -> sprintf "%s```%s%s%s```%s" nl nl (x.Trim()) nl nl  
+        | Para x -> sprintf "%s%s%s" nl (renderText x) nl  
         | ParamRef x -> let (CRef cref) = x  
-                        processParameterRef cref
+                        sprintf "*%s*" cref
         | TypeParamRef x -> let (CRef cref) = x  
-                            processTypeParameterRef cref
+                            sprintf "_%s_" cref
         | See x -> let (CRef cref) = x  
-                   processSee cref
-        | SeeAlso x -> String.Empty // ignore here - will be processed later
+                   sprintf "*See:* %s" (cref.Trim())
+        | SeeAlso x -> String.Empty // ignore here - will be rendered later
 
-    let processInlines (writer:TextWriter) (items:Inline list) =
-        writer.WriteLine ()
-
-        items
-        |> Seq.map processInline
-        |> Seq.iter(fun x -> x.TrimEnd() >>= writer.WriteLine)
-    
     let renderHeadline (writer:TextWriter) level headline =
         writer.WriteLine ()
 
@@ -77,6 +52,13 @@ module private MarkdownImpl =
 
         writer.WriteLine ( marker + " " + headline)
 
+    let renderInlines (writer:TextWriter) (items:Inline list) =
+        writer.WriteLine ()
+
+        items
+        |> Seq.map renderInline
+        |> Seq.iter(fun x -> x.TrimEnd() >>= writer.WriteLine)
+    
     let renderCRefDescriptions (writer:TextWriter) items =
         items 
         |> Seq.iter( fun x -> 
@@ -88,31 +70,7 @@ module private MarkdownImpl =
             writer.WriteLine x.description
         )
 
-    let processParameters (writer:TextWriter) headline (items:CRefDescription list) =
-        headline "Parameters"
-        items |> renderCRefDescriptions writer
-
-    let processReturns (writer:TextWriter) headline (items:Inline list) =
-        headline "Return value"
-        items |> processInlines writer 
-
-    let processExceptions (writer:TextWriter) headline (items:CRefDescription list) =
-        headline "Exceptions"
-        items |> renderCRefDescriptions writer
-
-    let processRemarks (writer:TextWriter) headline (items:Inline list) =
-        headline "Remarks"
-        items |> processInlines writer 
-
-    let processExample (writer:TextWriter) headline (items:Inline list) =
-        headline "Example"
-        items |> processInlines writer 
-
-    let processPermissions (writer:TextWriter) headline (items:CRefDescription list) =
-        headline "Permissions"
-        items |> renderCRefDescriptions writer
-
-    let processSeeAlso (writer:TextWriter) headline (doc:ApiDoc) =
+    let renderSeeAlso (writer:TextWriter) headline (doc:ApiDoc) =
         let seeAlso = [ doc.Summary
                         doc.Remarks
                         doc.Returns
@@ -138,16 +96,20 @@ module private MarkdownImpl =
             )
 
     let renderApiDoc (writer:TextWriter) doc headline = 
-        doc.Summary >>= processInlines writer 
+        doc.Summary >>= renderInlines writer 
 
-        doc.Params >>= processParameters writer headline
-        doc.Returns >>= processReturns writer headline
-        doc.Exceptions >>= processExceptions writer headline
-        doc.Remarks >>= processRemarks writer headline
-        doc.Example >>= processExample writer headline
-        doc.Permissions >>= processPermissions writer headline
+        let renderSection renderItems headlineText items =
+            headline headlineText
+            items |> renderItems writer 
 
-        doc |> processSeeAlso writer headline
+        doc.Params >>= renderSection renderCRefDescriptions "Parameters"
+        doc.Returns >>= renderSection renderInlines "Return value"
+        doc.Exceptions >>= renderSection renderCRefDescriptions "Exceptions"
+        doc.Remarks >>= renderSection renderInlines "Remarks"
+        doc.Example >>= renderSection renderInlines "Example"
+        doc.Permissions >>= renderSection renderCRefDescriptions "Permissions"
+
+        doc |> renderSeeAlso writer headline
                   
     let renderMembersOfKind (writer:TextWriter) (headline : string) level members = 
         writer.WriteLine()
