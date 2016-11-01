@@ -24,7 +24,7 @@ let generateAssemblyDoc outputFolder (assembly:DAssembly) =
     newDir assemblyFolder
     
     let renderType dtype =
-        use writer = new StreamWriter(Path.Combine(assemblyFolder, dtype.name + ".md"))
+        use writer = new StreamWriter(Path.Combine(assemblyFolder, (getFullName dtype) + ".md"))
         render writer dtype
 
     assembly.assembly.GetTypes()

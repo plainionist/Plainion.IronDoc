@@ -36,8 +36,7 @@ module private ReflectionImpl =
             let assemblyName = new AssemblyName( e.Name )
             let dependentAssemblyPath = baseDirs |> getAssemblyLocation assemblyName
             
-            Debugger.Launch() |> ignore
-            printfn ":: %A" assemblyName
+//            printfn ":: %A" assemblyName
 
             let tryLoadFromGAC () =
                 try
