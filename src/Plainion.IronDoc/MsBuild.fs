@@ -1,8 +1,6 @@
 ﻿namespace Plainion.IronDoc.MsBuild
 
 open System
-open System.Linq
-open System.Reflection
 open Microsoft.Build.Framework
 open Microsoft.Build.Utilities
 open Plainion.IronDoc
@@ -23,17 +21,12 @@ type IronDoc() =
         this.Log.LogMessage( MessageImportance.Normal, "IronDoc generation started" )
 
         try
-            Workflows.generateAssemblyFileDoc this.Assembly this.Output 
+            Workflows.generateAssemblyFileDoc this.Output this.Assembly 
 
             this.Log.LogMessage( MessageImportance.Normal, "IronDoc generation Finished. Output written to: {0}", this.Output )
 
             true
         with
-        | :? ReflectionTypeLoadException as ex -> 
-            ex.LoaderExceptions
-            |> Seq.map( fun e -> e.Message.ToString() )
-            |> Seq.iter( fun msg -> this.Log.LogError( msg ) )
-            false
         | ex ->
             this.Log.LogError( ex.ToString() )
             false
