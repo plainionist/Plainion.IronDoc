@@ -133,7 +133,7 @@ module private MarkdownImpl =
 module Api =
     open Plainion.IronDoc
 
-    let render (writer:TextWriter) dtype = 
+    let renderType (writer:TextWriter) dtype = 
         renderTypeHeader writer 1 (dtype, MemberType.Type(dtype) |> apiDocLoader.Get dtype)
 
         let rec renderTypeMembers (writer : TextWriter) level dtype = 
@@ -191,3 +191,26 @@ module Api =
             dtype.nestedTypes >>= renderNestedTypes
 
         renderTypeMembers writer 2 dtype
+
+    let renderAssembly getTextWriter getUri getSummaryWriter (dassembly:DAssembly) = 
+        let dtypes = dassembly.assembly.GetTypes()
+                     |> Seq.filter (fun t -> t.IsPublic)
+                     |> Seq.map (createDType dassembly)
+
+        dtypes
+        |> Seq.iter(fun x ->
+            use writer = getTextWriter x
+            renderType writer x )   
+
+        use writer = getSummaryWriter dassembly
+        renderHeadline writer 1 dassembly.name
+
+        dtypes
+        |> Seq.groupBy(fun x -> x.nameSpace )
+        |> Seq.iter(fun x -> 
+            renderHeadline writer 2 (fst x)
+            writer.WriteLine()
+
+            (snd x)
+            |> Seq.iter(fun dtype -> writer.WriteLine( sprintf "* [%s](%s)" dtype.name (getUri dtype)))
+        )

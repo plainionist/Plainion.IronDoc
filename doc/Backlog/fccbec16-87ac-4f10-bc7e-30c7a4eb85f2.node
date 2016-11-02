@@ -1,9 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Node Id="fccbec16-87ac-4f10-bc7e-30c7a4eb85f2" Created="635974271003860825" LastModified="636097180650738411" Origin="2856625b-08a7-446d-a528-72d708930d30">
-  <Caption><![CDATA[multi file documentation]]></Caption>
-  <Content><![CDATA[- one file per type
-- one summary per namespace
-
-- note namespace and assembly at every type page
-  (as in MSDN)]]></Content>
-</Node>
