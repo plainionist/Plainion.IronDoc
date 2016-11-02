@@ -8,6 +8,8 @@
     </PropertyGroup>
 
     <ItemGroup Condition=" '$(Package)' == 'IronDoc' ">
+        <NugetBuild Include="$(OutputPath)\FSharp.Core.dll"/>
+        
         <NugetBuild Include="$(OutputPath)\Plainion.IronDoc.exe"/>
         <NugetBuild Include="$(OutputPath)\Plainion.IronDoc.exe.config"/>
         <NugetBuild Include="$(OutputPath)\Plainion.IronDoc.pdb"/>

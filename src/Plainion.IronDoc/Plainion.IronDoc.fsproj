@@ -43,7 +43,9 @@
       <Link>Properties\GlobalAssemblyInfo.fs</Link>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.fs" />
-    <Conent Include="MsBuild\Plainion.IronDoc.targets" />
+    <Conent Include="MsBuild\Plainion.IronDoc.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Conent>
     <Compile Include="Core.fs" />
     <Compile Include="DomainModel.fs" />
     <Compile Include="Parsing.Reflection.fs" />
