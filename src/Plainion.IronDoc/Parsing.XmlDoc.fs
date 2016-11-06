@@ -112,8 +112,10 @@ module XmlDocApi =
                 match xmlDocs |> Map.tryFind dtype.assembly.location with
                 | Some d -> xmlDocs, d
                 | None -> let docFile = Path.ChangeExtension(dtype.assembly.location, ".xml")
-                          let d = XElement.Load docFile |> createXmlDoc
-                          xmlDocs.Add(dtype.assembly.location, d),d
+                          match File.Exists(docFile) with
+                          | false -> xmlDocs,XmlDocDocument([])
+                          | true -> let d = XElement.Load docFile |> createXmlDoc
+                                    xmlDocs.Add(dtype.assembly.location, d),d
 
             let rec loop xmlDocs =
                 async {

@@ -71,3 +71,5 @@ let handleLastChanceException (ex:Exception) =
     | :? ReflectionTypeLoadException as e -> printfn "Exception: %A" ex
                                              e.LoaderExceptions |> Seq.iter (printfn " ==> LoaderException: %A")
     | _ -> printf "Exception: %A" ex
+
+    Environment.Exit(1)
