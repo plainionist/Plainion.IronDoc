@@ -2,5 +2,8 @@
 <Tree>
   <Node Id="2856625b-08a7-446d-a528-72d708930d30">
     <Caption><![CDATA[Backlog]]></Caption>
+    <Node Id="9317f41e-d07a-45c0-abad-72e3f8200d27">
+      <Caption><![CDATA[avoid PostAndReply]]></Caption>
+    </Node>
   </Node>
 </Tree>

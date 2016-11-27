@@ -2,8 +2,8 @@
 <Tree>
   <Node Id="b53e85df-75f1-43f6-b2f7-b13a2213f883">
     <Caption><![CDATA[Planning]]></Caption>
-    <Node Id="9317f41e-d07a-45c0-abad-72e3f8200d27">
-      <Caption><![CDATA[avoid PostAndReply]]></Caption>
+    <Node Id="fa96576b-cb5e-466a-ab07-acd1f3c22a03">
+      <Caption><![CDATA[copy also "Readme.md" from the projects and folders to "doc" location]]></Caption>
     </Node>
   </Node>
 </Tree>

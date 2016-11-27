@@ -1,0 +1,5 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Node Id="fa96576b-cb5e-466a-ab07-acd1f3c22a03" Created="636158394560149867" LastModified="636158394822384866">
+  <Caption><![CDATA[copy also "Readme.md" from the projects and folders to "doc" location]]></Caption>
+  <Content><![CDATA[to have one consistent documentation over all]]></Content>
+</Node>
