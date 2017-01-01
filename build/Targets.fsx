@@ -19,10 +19,6 @@ Target "CreatePackage" (fun _ ->
 
     [
         ("Plainion.IronDoc.*", Some "build", None)
-    ]
-    |> PNuGet.Pack (projectRoot </> "build" </> "Plainion.IronDoc.nuspec") (projectRoot </> "pkg")
-
-    [
         ( projectRoot </> "src/Plainion.IronDoc/MsBuild/Plainion.IronDoc.targets", Some "build", None)
     ]
     |> PNuGet.Pack (projectRoot </> "build" </> "Plainion.IronDoc.AfterBuild.nuspec") (projectRoot </> "pkg")
