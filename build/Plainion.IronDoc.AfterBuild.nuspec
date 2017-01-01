@@ -1,19 +1,19 @@
 <?xml version="1.0"?>
 <package >
-    <metadata>
-        <id>Plainion.IronDoc.AfterBuild</id>
-        <title>Plainion.IronDoc.AfterBuild</title>
-        <version>2.0.0.0</version>
-        <authors>ronin4net</authors>
-        <owners>ronin4net</owners>
-        <licenseUrl>http://opensource.org/licenses/BSD-3-Clause</licenseUrl>
-        <projectUrl>https://github.com/ronin4net/Plainion.IronDoc</projectUrl>
-        <requireLicenseAcceptance>false</requireLicenseAcceptance>
-        <description>All public APIs get documented (even if Xml doc is missing)</description>
-        <releaseNotes>Upgraded to Plainion.IronDoc 2.0.0</releaseNotes>
-        <copyright>Copyright 2016</copyright>
-        <dependencies>
-            <dependency id="Plainion.IronDoc" version="2.0.0.0" />
-        </dependencies>
-    </metadata>
+  <metadata>
+    <id>@project@</id>
+    <title>@project@</title>
+    <version>@build.number@</version>
+    <authors>ronin4net</authors>
+    <owners>ronin4net</owners>
+    <licenseUrl>http://opensource.org/licenses/BSD-3-Clause</licenseUrl>
+    <projectUrl>https://github.com/ronin4net/Plainion.IronDoc</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>MsBuild AfterBuild hook for IronDoc</description>
+    <releaseNotes>
+      @releaseNotes@
+    </releaseNotes>
+    <copyright>Copyright 2017</copyright>
+  </metadata>
+  @files@
 </package>

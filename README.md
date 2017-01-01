@@ -29,8 +29,8 @@ increases  I encourage you to switch to one of the "bigger solutions" out there.
 
 ## Usage
 
-Just install the nuget package for the projects you want to have API doc. IronDoc will then automatically during 
-normal build create a <project file>.md file next to the <project file>.csproj file.
+Just install the nuget package "Plainion.IronDoc.AfterBuild " for the projects you want to have API doc. 
+IronDoc will then automatically during normal build create a <project file>.md file next to the <project file>.csproj file.
 
 You can then check this file into your source control system. 
 

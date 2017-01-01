@@ -34,9 +34,6 @@
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
-    <Compile Include="..\..\build\GlobalAssemblyInfo.fs">
-      <Link>Properties\GlobalAssemblyInfo.fs</Link>
-    </Compile>
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Core.fs" />
     <None Include="packages.config" />

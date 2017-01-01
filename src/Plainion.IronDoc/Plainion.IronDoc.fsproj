@@ -39,9 +39,6 @@
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
-    <Compile Include="..\..\build\GlobalAssemblyInfo.fs">
-      <Link>Properties\GlobalAssemblyInfo.fs</Link>
-    </Compile>
     <Compile Include="Properties\AssemblyInfo.fs" />
     <Conent Include="MsBuild\Plainion.IronDoc.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
