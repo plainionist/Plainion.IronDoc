@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>@project@</id>
-    <title>@project@</title>
+    <id>Plainion.IronDoc</id>
+    <title>Plainion.IronDoc</title>
     <version>@build.number@</version>
     <authors>ronin4net</authors>
     <owners>ronin4net</owners>
