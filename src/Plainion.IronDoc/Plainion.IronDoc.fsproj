@@ -39,10 +39,10 @@
   </Choose>
   <Import Project="$(FSharpTargetsPath)" />
   <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.fs" />
     <Conent Include="MsBuild\Plainion.IronDoc.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Conent>
+    <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Core.fs" />
     <Compile Include="DomainModel.fs" />
     <Compile Include="Parsing.Reflection.fs" />
