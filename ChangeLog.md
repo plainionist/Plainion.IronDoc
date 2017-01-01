@@ -4,6 +4,7 @@
 - IronDoc.exe now released on GitHub 
   - IronDoc nuget package discontinued
   - IronDoc.AfterBuild nuget package will be continued !!
+- -h output fixed
  
 ## 2.0.0 - 2016-11-02
 

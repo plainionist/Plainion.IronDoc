@@ -1,12 +1,26 @@
 
-# Plainion.IronDoc
+IronDoc converts .NET XML API documentation into MarkDown.
 
-- Converts .NET XML API documentation into MarkDown formated files
-- nicely integrates with GitHub documentation system
-- Inspired by: <http://www.codeproject.com/Articles/1030797/Automatic-Markdown-formatting-for-VS-xml-documenta>
+# Usage
+
+Simply run IronDoc from command line:
+
+```Cmd
+Plainion.IronDoc.exe -assembly Plainion.IronDoc.exe -output docs/api
+```
+
+## MsBuild integration
+
+In order to smoothly integrate IronDoc into MsBuild just
+
+- install the nuget package "Plainion.IronDoc.AfterBuild " for the projects you want to have API doc
+ 
+The output by default will be written at $(SolutionDir)\doc\Api.
+
+Use the property "IronDocOutput" to configure the output location.
 
 
-## Motivation
+# Motivation
 
 Generating API documentation for .NET projects have always be a pain.
 
@@ -27,12 +41,6 @@ Of course simplicitly comes with reduced flexibility. If your project grows and 
 increases  I encourage you to switch to one of the "bigger solutions" out there.
 
 
-## Usage
+# References
 
-Just install the nuget package "Plainion.IronDoc.AfterBuild " for the projects you want to have API doc. 
-IronDoc will then automatically during normal build create a <project file>.md file next to the <project file>.csproj file.
-
-You can then check this file into your source control system. 
-
-Hint: GitHub will automatically render .md files in HTML.
-
+- Inspired by: <http://www.codeproject.com/Articles/1030797/Automatic-Markdown-formatting-for-VS-xml-documenta>

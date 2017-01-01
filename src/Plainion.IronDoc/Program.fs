@@ -1,17 +1,16 @@
 ﻿// command line interface to Api doc processor
 module Plainion.IronDoc.Program
 
-open System
 open System.IO
 open Plainion.IronDoc
 
 let usage() =
-    printf "Plainion.IronDoc [Options]"
-    printf ""
-    printf "Options:"
-    printf  "  -h                 - Prints this help"
-    printf  "  -assembly <file>   - .Net assembly to generate documention for"
-    printf  "  -output <dir>      - full path to output folder"
+    printfn "Plainion.IronDoc [Options]"
+    printfn ""
+    printfn "Options:"
+    printfn  "  -h                 - Prints this help"
+    printfn  "  -assembly <file>   - .Net assembly to generate documention for"
+    printfn  "  -output <dir>      - full path to output folder"
 
 type CommandLineOptions = {
     printHelp : bool

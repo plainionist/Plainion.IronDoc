@@ -3,7 +3,6 @@
 module Plainion.IronDoc.Workflows
 
 open System.IO
-open System.Reflection
 open Plainion.IronDoc.Parsing
 open Plainion.IronDoc.Rendering
 
