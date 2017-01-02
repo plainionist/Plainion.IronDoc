@@ -6,7 +6,6 @@ open System.IO
 open Plainion.IronDoc.Parsing
 open Plainion.IronDoc.Rendering
 open System
-open System.Diagnostics
 
 let generateTypeDoc writer t = 
     renderType writer t
@@ -19,7 +18,7 @@ type Tree =
 /// One file per type.
 /// Summary page per namespace listing all types
 /// (with readme.md from source folder at top if available)    
-let generateAssemblyDoc outputFolder (assembly:DAssembly) = 
+let generateAssemblyDoc outputFolder (assembly:DAssembly) (sourceFolder:string option) = 
     let namespaceTypesMap =
         assembly.assembly.GetTypes()
         |> Seq.filter (fun t -> t.IsPublic)
@@ -69,8 +68,19 @@ let generateAssemblyDoc outputFolder (assembly:DAssembly) =
 
         // render summary file
         use writer =  new StreamWriter(Path.Combine(folder, "ReadMe.md")) 
+
         renderHeadline writer 1 fullName
         writer.WriteLine()
+
+        match sourceFolder with
+        | None -> ()
+        | Some src ->   // take full path without the first element as this is usually the root of the
+                        // source folder and not represented as separate folder 
+                        let readMe = Path.Combine(src, Path.Combine(fullPath |> Seq.skip 1 |> Array.ofSeq), "ReadMe.md")
+                        if File.Exists readMe then
+                            File.ReadAllText(readMe).Trim().Split([|Environment.NewLine|], StringSplitOptions.None)
+                            |> Seq.map(fun line -> if line.StartsWith("#", StringComparison.InvariantCulture) then "#" + line else line )
+                            |> Seq.iter writer.WriteLine
 
         renderHeadline writer 2 "Types"
         writer.WriteLine()

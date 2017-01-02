@@ -4,7 +4,6 @@ module Plainion.IronDoc.DomainModel
 
 open System
 open System.Reflection
-open System.Xml.Linq
 
 type Field = { name : string
                fieldType : Type }

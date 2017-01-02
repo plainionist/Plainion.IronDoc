@@ -9,15 +9,19 @@ Simply run IronDoc from command line:
 Plainion.IronDoc.exe -assembly Plainion.IronDoc.exe -output docs/api
 ```
 
+optionally you can specify the path to soure sources to include ReadMe.md files from your sources in the output:
+
+```Cmd
+Plainion.IronDoc.exe -assembly Plainion.IronDoc.exe -sources \ws\Plainion.IronDoc\src\Plainion.IronDoc -output docs/api
+```
+
 ## MsBuild integration
 
 In order to smoothly integrate IronDoc into MsBuild just
 
-- install the nuget package "Plainion.IronDoc.AfterBuild " for the projects you want to have API doc
- 
-The output by default will be written at $(SolutionDir)\doc\Api.
-
-Use the property "IronDocOutput" to configure the output location.
+- Install the nuget package "Plainion.IronDoc.AfterBuild " for the projects you want to have API doc
+- The property "IronDocOutput" defines the output location (default: $(SolutionDir)\doc\Api)
+- The property "IronDocSourceFolder" defines the source location (default: $(MSBuildProjectDirectory))
 
 
 # Motivation

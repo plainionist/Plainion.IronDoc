@@ -6,11 +6,12 @@
     <PropertyGroup>
         <IronDocInputAssembly>$(OutDir)$(TargetName)$(TargetExt)</IronDocInputAssembly>
 
-        <IronDocOutput Condition="'$(IronDocOutput)' == ''">$(SolutionDir)\doc\Api</IronDocOutput>
+      <IronDocOutput Condition="'$(IronDocOutput)' == ''">$(SolutionDir)\doc\Api</IronDocOutput>
+      <IronDocSourceFolder Condition="'$(IronDocSourceFolder)' == ''">$(MSBuildProjectDirectory)</IronDocSourceFolder>
     </PropertyGroup>
 
-    <Target Name="AfterBuild" Inputs="$(IronDocInputAssembly)" Outputs="$(MSBuildProjectName).md">
-        <IronDoc Assembly="$(IronDocInputAssembly)" Output="$(IronDocOutput)"/>
+    <Target Name="AfterBuild" Inputs="$(IronDocInputAssembly)" Outputs="$(IronDocOutput)/ReadMe.md">
+        <IronDoc Assembly="$(IronDocInputAssembly)" SourceFolder="$(IronDocSourceFolder)" Output="$(IronDocOutput)"/>
     </Target>
 </Project>
 

@@ -10,11 +10,13 @@ let usage() =
     printfn "Options:"
     printfn  "  -h                 - Prints this help"
     printfn  "  -assembly <file>   - .Net assembly to generate documention for"
+    printfn  "  -sources <dir>     - full path to sources of this assembly (optional)"
     printfn  "  -output <dir>      - full path to output folder"
 
 type CommandLineOptions = {
     printHelp : bool
     assembly : string
+    sources : string option
     output : string }
 
 let rec parseCommandLineRec args optionsSoFar = 
@@ -29,7 +31,7 @@ let rec parseCommandLineRec args optionsSoFar =
             let newOptionsSoFar = { optionsSoFar with assembly=h}
             parseCommandLineRec xss newOptionsSoFar 
         | _ -> 
-            printfn "OrderBy needs a second argument"
+            printfn "Assembly needs a second argument"
             parseCommandLineRec xs optionsSoFar 
     | "-output"::xs -> 
         match xs with
@@ -37,7 +39,15 @@ let rec parseCommandLineRec args optionsSoFar =
             let newOptionsSoFar = { optionsSoFar with output=h}
             parseCommandLineRec xss newOptionsSoFar 
         | _ -> 
-            printfn "OrderBy needs a second argument"
+            printfn "Output needs a second argument"
+            parseCommandLineRec xs optionsSoFar 
+    | "-sources"::xs -> 
+        match xs with
+        | h::xss -> 
+            let newOptionsSoFar = { optionsSoFar with sources=Some h}
+            parseCommandLineRec xss newOptionsSoFar 
+        | _ -> 
+            printfn "Sources needs a second argument"
             parseCommandLineRec xs optionsSoFar 
     | x::xs -> 
         printfn "Option '%s' is unrecognized" x
@@ -47,6 +57,7 @@ let parseCommandLine args =
     let defaultOptions = {
         printHelp = false
         assembly = null
+        sources = None
         output = null
         }
 
@@ -72,6 +83,6 @@ let main argv =
     | Some x ->
         printfn "Generating documentation to: %s" x.output
 
-        Workflows.generateAssemblyFileDoc x.output x.assembly
+        Workflows.generateAssemblyFileDoc x.output x.assembly x.sources
 
         0
