@@ -5,11 +5,14 @@ module Plainion.IronDoc.Workflows
 open System.IO
 open Plainion.IronDoc.Parsing
 open Plainion.IronDoc.Rendering
-open System.Threading
 open System
+open System.Diagnostics
 
 let generateTypeDoc writer t = 
     renderType writer t
+
+type Tree =
+  | Tree of string * Tree list
 
 /// Root folder per assembly.
 /// Sub-folder per namespace
@@ -17,41 +20,46 @@ let generateTypeDoc writer t =
 /// Summary page per namespace listing all types
 /// (with readme.md from source folder at top if available)    
 let generateAssemblyDoc outputFolder (assembly:DAssembly) = 
-    let assemblyFolder = Path.Combine(outputFolder,assembly.name)
-
-    if Directory.Exists assemblyFolder then 
-        Directory.Delete(assemblyFolder, true)
-
-    Directory.CreateDirectory(assemblyFolder) |> ignore
-    
-    // seems that dir is not instantly created
-    Thread.Sleep(50)
-
-    let namespaces =
+    let namespaceTypesMap =
         assembly.assembly.GetTypes()
         |> Seq.filter (fun t -> t.IsPublic)
         |> Seq.map (createDType assembly)
         |> Seq.groupBy(fun x -> x.nameSpace )
+        |> dict
+    
+    let rec createTrees (namespaces:list<list<string>>) = [
+        for top in namespaces |> Seq.groupBy(fun x -> Seq.head x) do
+            let name = top |> fst
+            let children = 
+                snd top 
+                |> Seq.map(function | [] -> [] | h::t -> t)
+                |> Seq.filter(fun x -> x.IsEmpty |> not)
+                |> List.ofSeq
+            yield if children.Length = 0 then Tree(name,[]) else Tree(name, createTrees children)
+    ]
+
+    let nsTrees = 
+        namespaceTypesMap
+        |> Seq.map(fun x -> x.Key.Split( [|'.'|], StringSplitOptions.RemoveEmptyEntries) |> List.ofArray)
+        |> Seq.sortBy(fun x ->x.Length)
         |> List.ofSeq
+        |> createTrees
 
-    let rootNs = 
-        namespaces
-        |> Seq.map fst
-        |> Seq.sortBy(fun x -> x.Length)
-        |> Seq.head
+    let rec renderTree (path:string list) (tree:Tree) =
+        let (Tree(name, children)) = tree
 
-    let renderNameSpace (ns:string,types) =
-        let folder = 
-            if ns.StartsWith(rootNs, StringComparison.Ordinal) then 
-                let subNs = ns.Substring(rootNs.Length).Trim('.')
-                Path.Combine(assemblyFolder, subNs)
-            else 
-                assemblyFolder
+        let fullPath = [ yield! path; yield name ]
 
-        if Directory.Exists folder |> not then 
-            Directory.CreateDirectory(folder) |> ignore
+        let subFolder = Path.Combine(fullPath |> Array.ofList)
+        let folder = Path.Combine(outputFolder, subFolder)
 
-        let types = types |> List.ofSeq
+        if Directory.Exists folder then 
+            Directory.Delete(folder, true)
+
+        Directory.CreateDirectory(folder) |> ignore
+
+        let fullName = String.Join(".", fullPath)
+        let types = namespaceTypesMap.[fullName]
 
         // render individual type files
         types
@@ -61,7 +69,7 @@ let generateAssemblyDoc outputFolder (assembly:DAssembly) =
 
         // render summary file
         use writer =  new StreamWriter(Path.Combine(folder, "ReadMe.md")) 
-        renderHeadline writer 1 ns
+        renderHeadline writer 1 fullName
         writer.WriteLine()
 
         renderHeadline writer 2 "Types"
@@ -70,8 +78,18 @@ let generateAssemblyDoc outputFolder (assembly:DAssembly) =
         types
         |> Seq.iter(fun x -> writer.WriteLine( sprintf "* [%s](%s)" x.name (x.name + ".md") ))
 
-    namespaces
-    |> Seq.iter renderNameSpace
+        if children.IsEmpty |> not then
+            renderHeadline writer 2 "Namespaces"
+            writer.WriteLine()
+
+            children
+            |> Seq.iter(fun child -> 
+                let (Tree(name, children)) = child
+                writer.WriteLine( sprintf "* [%s.%s](%s/ReadMe.md)" fullName name name )
+                renderTree fullPath child)
+
+    nsTrees
+    |> Seq.iter (renderTree [])
 
     
 let generateAssemblyFileDoc outputFolder assemblyFile  = 
