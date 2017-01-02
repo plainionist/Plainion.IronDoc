@@ -34,7 +34,16 @@ Target "DeployPackage" (fun _ ->
 
     PGitHub.Release [ zip ]
 
-    PNuGet.Publish (projectRoot </> "pkg")
+    //PNuGet.Publish (projectRoot </> "pkg")
+    let release = getChangeLog()
+
+    NuGetPublish  (fun p -> {p with OutputPath = (projectRoot </> "pkg")
+                                    WorkingDir = projectRoot
+                                    Project = "Plainion.IronDoc.AfterBuild"
+                                    Version = release.AssemblyVersion
+                                    PublishUrl = "https://www.nuget.org/api/v2/package"
+                                    Publish = true }) 
+
 )
 
 RunTarget()
