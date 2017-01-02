@@ -6,10 +6,16 @@ open System.IO
 open Plainion.IronDoc.Parsing
 open Plainion.IronDoc.Rendering
 open System.Threading
+open System
 
 let generateTypeDoc writer t = 
     renderType writer t
-    
+
+/// Root folder per assembly.
+/// Sub-folder per namespace
+/// One file per type.
+/// Summary page per namespace listing all types
+/// (with readme.md from source folder at top if available)    
 let generateAssemblyDoc outputFolder (assembly:DAssembly) = 
     let assemblyFolder = Path.Combine(outputFolder,assembly.name)
 
@@ -21,31 +27,52 @@ let generateAssemblyDoc outputFolder (assembly:DAssembly) =
     // seems that dir is not instantly created
     Thread.Sleep(50)
 
-    let getTextWriter = fun x -> new StreamWriter(Path.Combine(assemblyFolder, (getFullName x) + ".md"))
-    let getUri = fun x -> (getFullName x) + ".md"
-    let getSummaryWriter =  fun (x:DAssembly) -> new StreamWriter(Path.Combine(assemblyFolder, x.name + ".md"))
+    let namespaces =
+        assembly.assembly.GetTypes()
+        |> Seq.filter (fun t -> t.IsPublic)
+        |> Seq.map (createDType assembly)
+        |> Seq.groupBy(fun x -> x.nameSpace )
+        |> List.ofSeq
 
-    let dtypes = assembly.assembly.GetTypes()
-                    |> Seq.filter (fun t -> t.IsPublic)
-                    |> Seq.map (createDType assembly)
+    let rootNs = 
+        namespaces
+        |> Seq.map fst
+        |> Seq.sortBy(fun x -> x.Length)
+        |> Seq.head
 
-    dtypes
-    |> Seq.iter(fun x ->
-        use writer = getTextWriter x
-        renderType writer x )   
+    let renderNameSpace (ns:string,types) =
+        let folder = 
+            if ns.StartsWith(rootNs, StringComparison.Ordinal) then 
+                let subNs = ns.Substring(rootNs.Length).Trim('.')
+                Path.Combine(assemblyFolder, subNs)
+            else 
+                assemblyFolder
 
-    use writer = getSummaryWriter assembly
-    renderHeadline writer 1 assembly.name
+        if Directory.Exists folder |> not then 
+            Directory.CreateDirectory(folder) |> ignore
 
-    dtypes
-    |> Seq.groupBy(fun x -> x.nameSpace )
-    |> Seq.iter(fun x -> 
-        renderHeadline writer 2 (fst x)
+        let types = types |> List.ofSeq
+
+        // render individual type files
+        types
+        |> Seq.iter(fun x ->
+            use writer = new StreamWriter(Path.Combine(folder, x.name + ".md"))
+            renderType writer x )   
+
+        // render summary file
+        use writer =  new StreamWriter(Path.Combine(folder, "ReadMe.md")) 
+        renderHeadline writer 1 ns
         writer.WriteLine()
 
-        (snd x)
-        |> Seq.iter(fun dtype -> writer.WriteLine( sprintf "* [%s](%s)" dtype.name (getUri dtype)))
-    )
+        renderHeadline writer 2 "Types"
+        writer.WriteLine()
+
+        types
+        |> Seq.iter(fun x -> writer.WriteLine( sprintf "* [%s](%s)" x.name (x.name + ".md") ))
+
+    namespaces
+    |> Seq.iter renderNameSpace
+
     
 let generateAssemblyFileDoc outputFolder assemblyFile  = 
     generateAssemblyDoc outputFolder (assemblyLoader.Load assemblyFile)
