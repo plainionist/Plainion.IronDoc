@@ -1,5 +1,5 @@
 
-## 2.1.0 - Unreleased
+## 2.1.0 - 2017-01-02
 
 - IronDoc.exe now released on GitHub 
   - IronDoc nuget package discontinued
