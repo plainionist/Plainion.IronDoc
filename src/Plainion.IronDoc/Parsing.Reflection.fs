@@ -25,6 +25,29 @@ module private ReflectionImpl =
         |> List.collect( fun baseDir -> assemblyExtensions |> List.map( fun ext -> Path.Combine(baseDir, assemblyName.Name + ext) ) )
         |> List.tryFind File.Exists
 
+    let reflectionOnlyLoadByName baseDirs assemblyName =
+        let dependentAssemblyPath = baseDirs |> getAssemblyLocation assemblyName
+            
+//            printfn ":: %A" assemblyName
+
+        let tryLoadFromGAC () =
+            try
+                // e.g. .NET assemblies, assemblies from GAC
+                Assembly.ReflectionOnlyLoad assemblyName.FullName
+            with
+            | _ -> 
+                // ignore exception here - e.g. System.Windows.Interactivity - app will work without
+                Debug.WriteLine ( "Failed to load: " + assemblyName.ToString() )
+                null
+
+        match dependentAssemblyPath with
+        | None -> tryLoadFromGAC()
+        | Some x -> 
+            if File.Exists x then
+                (reflectionOnlyLoad x).assembly
+            else
+                tryLoadFromGAC()
+
     let resolveReflectionOnlyAssembly (e:ResolveEventArgs) baseDirs =
         let loadedAssembly = 
             AppDomain.CurrentDomain.ReflectionOnlyGetAssemblies ()
@@ -32,29 +55,7 @@ module private ReflectionImpl =
 
         match loadedAssembly with
         | Some x -> x
-        | None ->
-            let assemblyName = new AssemblyName( e.Name )
-            let dependentAssemblyPath = baseDirs |> getAssemblyLocation assemblyName
-            
-//            printfn ":: %A" assemblyName
-
-            let tryLoadFromGAC () =
-                try
-                    // e.g. .NET assemblies, assemblies from GAC
-                    Assembly.ReflectionOnlyLoad e.Name
-                with
-                | _ -> 
-                    // ignore exception here - e.g. System.Windows.Interactivity - app will work without
-                    Debug.WriteLine ( "Failed to load: " + assemblyName.ToString() )
-                    null
-
-            match dependentAssemblyPath with
-            | None -> tryLoadFromGAC()
-            | Some x -> 
-                if File.Exists x then
-                    (reflectionOnlyLoad x).assembly
-                else
-                    tryLoadFromGAC()
+        | None -> new AssemblyName( e.Name ) |> reflectionOnlyLoadByName baseDirs
 
     let loadAssembly baseDirs assembly = 
         let newBaseDirs = Path.GetDirectoryName(assembly) :: baseDirs
@@ -82,12 +83,20 @@ module private ReflectionImpl =
 
         use g = new Guard( register, unregister )
 
+        Debugger.Launch() |> ignore
+
         let assembly = reflectionOnlyLoad assembly
 
         // we need to get all types here while we still have the "resolve" handlers attached
         // if we do not do so we ll fail later getting all types
         assembly.assembly.GetTypes() |> ignore
 
+        // looks like loading all times is not enough. if we read parameter types later on still
+        // unknown types may pop up
+        // -> load referenced assemblies while having resolver event handlers attached
+        assembly.assembly.GetReferencedAssemblies()
+        |> Seq.iter (reflectionOnlyLoadByName newBaseDirs >> ignore)
+         
         newBaseDirs, assembly
     
     type LoadAssemblyMsg = 
