@@ -6,7 +6,7 @@ open NUnit.Framework
 open Plainion.IronDoc
 open Plainion.IronDoc.Tests.Fakes.Acceptance
 
-// contains tests for specific parsing scenarios
+/// contains tests for specific parsing scenarios
 [<TestFixture>]
 module AcceptanceTests =
    

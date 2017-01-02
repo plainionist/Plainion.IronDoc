@@ -1,11 +1,7 @@
 ﻿namespace Plainion.IronDoc.Tests
 
-open System
-open System.IO
-open System.Collections.Generic
 open NUnit.Framework
 open Plainion.IronDoc
-open Plainion.IronDoc.Tests.Fakes
 open Plainion.IronDoc.Tests.Fakes
 
 type internal OverwrittenMethods() =
@@ -25,8 +21,6 @@ type internal InternalMembers() =
 // test specific scenarios - parsing + rendering
 [<TestFixture>]
 module ParsingTests =
-    open Plainion.IronDoc.Parsing
-    
     [<Test>]
     let ``Overwritten method is rendered``() =
         let markdownDocument = renderApiDoc typedefof<OverwrittenMethods>
