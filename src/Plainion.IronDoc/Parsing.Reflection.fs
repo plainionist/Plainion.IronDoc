@@ -83,8 +83,6 @@ module private ReflectionImpl =
 
         use g = new Guard( register, unregister )
 
-        Debugger.Launch() |> ignore
-
         let assembly = reflectionOnlyLoad assembly
 
         // we need to get all types here while we still have the "resolve" handlers attached

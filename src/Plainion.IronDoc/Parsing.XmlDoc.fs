@@ -1,8 +1,6 @@
 ﻿// reads relevant information from .Net Xml Documentaion
 namespace Plainion.IronDoc.Parsing
 
-open System
-open System.Reflection
 open System.Xml.Linq
 open Plainion.IronDoc
 
@@ -17,7 +15,7 @@ module private Impl =
         | InvariantEqual "TypeParamRef" -> TypeParamRef (CRef (e.Attribute(!!"cref").Value))
         | InvariantEqual "See" -> See (CRef (e.Attribute(!!"cref").Value))
         | InvariantEqual "SeeAlso" -> SeeAlso (CRef (e.Attribute(!!"cref").Value))
-        | x -> failwithf "Failed to parse: %s" x
+        | x -> failwithf "ERROR: %s is not valid inline. Pls correct XML Api doc at: %A" x e
 
     let parseXNode (node:XNode) =
         match node with
