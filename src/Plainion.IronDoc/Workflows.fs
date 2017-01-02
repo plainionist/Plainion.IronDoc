@@ -37,13 +37,6 @@ let generateAssemblyDoc outputFolder (assembly:DAssembly) (sourceFolder:string o
             yield if children.Length = 0 then Tree(name,[]) else Tree(name, createTrees children)
     ]
 
-    let nsTrees = 
-        namespaceTypesMap
-        |> Seq.map(fun x -> x.Key.Split( [|'.'|], StringSplitOptions.RemoveEmptyEntries) |> List.ofArray)
-        |> Seq.sortBy(fun x ->x.Length)
-        |> List.ofSeq
-        |> createTrees
-
     let rec renderTree (path:string list) (tree:Tree) =
         let (Tree(name, children)) = tree
 
@@ -63,7 +56,7 @@ let generateAssemblyDoc outputFolder (assembly:DAssembly) (sourceFolder:string o
         // render individual type files
         types
         |> Seq.iter(fun x ->
-            use writer = new StreamWriter(Path.Combine(folder, x.name + ".md"))
+            use writer = new StreamWriter(Path.Combine(folder, (x.name |> tryRemoveAfter '`') + ".md"))
             renderType writer x )   
 
         // render summary file
@@ -86,7 +79,8 @@ let generateAssemblyDoc outputFolder (assembly:DAssembly) (sourceFolder:string o
         writer.WriteLine()
 
         types
-        |> Seq.iter(fun x -> writer.WriteLine( sprintf "* [%s](%s)" x.name (x.name + ".md") ))
+        |> Seq.iter(fun x -> let normalizedName = x.name |> tryRemoveAfter '`'
+                             writer.WriteLine( sprintf "* [%s](%s)" normalizedName (normalizedName + ".md") ) )
 
         if children.IsEmpty |> not then
             renderHeadline writer 2 "Namespaces"
@@ -98,7 +92,11 @@ let generateAssemblyDoc outputFolder (assembly:DAssembly) (sourceFolder:string o
                 writer.WriteLine( sprintf "* [%s.%s](%s/ReadMe.md)" fullName name name )
                 renderTree fullPath child)
 
-    nsTrees
+    namespaceTypesMap
+    |> Seq.map(fun x -> x.Key.Split( [|'.'|], StringSplitOptions.RemoveEmptyEntries) |> List.ofArray)
+    |> Seq.sortBy(fun x ->x.Length)
+    |> List.ofSeq
+    |> createTrees
     |> Seq.iter (renderTree [])
 
     

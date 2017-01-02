@@ -29,6 +29,13 @@ let substringAfter ( value : string ) ( sep : char ) =
     let pos = value.IndexOf (sep)
     value.Substring(pos + 1)
 
+let tryRemoveAfter (sep : char) (value : string) =
+    let pos = value.IndexOf (sep)
+    if pos > -1 then
+        value.Substring(0,pos)
+    else
+        value
+
 let normalizeSpace (value : string) =
     Regex.Replace(value.Trim(), @"\s+", " ")
 
