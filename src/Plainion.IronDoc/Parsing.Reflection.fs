@@ -55,49 +55,13 @@ module private ReflectionImpl =
         | Some x -> x
         | None -> assemblyName |> reflectionOnlyLoadByName baseDirs 
     
-    let resolveReflectionOnlyAssembly (e:ResolveEventArgs) baseDirs =
-        new AssemblyName( e.Name ) |> tryReflectionOnlyLoadByName baseDirs
-
     let loadAssembly baseDirs assembly = 
         let newBaseDirs = Path.GetDirectoryName(assembly) :: baseDirs
                             |> Seq.distinct
                             |> List.ofSeq
 
-        let onAssemblyResolve = System.ResolveEventHandler( fun _ e ->
-            let assembly = AppDomain.CurrentDomain.GetAssemblies ()
-                           |> Array.tryFind( fun asm -> String.Equals(asm.FullName, e.Name, StringComparison.OrdinalIgnoreCase) )
-
-            match assembly with
-            | Some x -> x
-            | None -> null )
-
-        let onReflectionOnlyAssemblyResolve = System.ResolveEventHandler( fun _ e ->
-            newBaseDirs |> resolveReflectionOnlyAssembly e )
-
-        let register () =
-            AppDomain.CurrentDomain.add_AssemblyResolve onAssemblyResolve
-            AppDomain.CurrentDomain.add_ReflectionOnlyAssemblyResolve onReflectionOnlyAssemblyResolve
+        newBaseDirs, reflectionOnlyLoad assembly
         
-        let unregister () =     
-            AppDomain.CurrentDomain.remove_AssemblyResolve onAssemblyResolve
-            AppDomain.CurrentDomain.remove_ReflectionOnlyAssemblyResolve onReflectionOnlyAssemblyResolve
-
-        use g = new Guard( register, unregister )
-
-        let assembly = reflectionOnlyLoad assembly
-
-        // we need to get all types here while we still have the "resolve" handlers attached
-        // if we do not do so we ll fail later getting all types
-        assembly.assembly.GetTypes() |> ignore
-
-        // looks like loading all times is not enough. if we read parameter types later on still
-        // unknown types may pop up
-        // -> load referenced assemblies while having resolver event handlers attached
-        assembly.assembly.GetReferencedAssemblies()
-        |> Seq.iter (tryReflectionOnlyLoadByName newBaseDirs >> ignore)
-         
-        newBaseDirs, assembly
-    
     type LoadAssemblyMsg = 
         | LoadAssembly of string * replyChannel : AsyncReplyChannel<DAssembly>
         | Stop 
@@ -105,6 +69,7 @@ module private ReflectionImpl =
 [<AutoOpen>]
 module ReflectionApi = 
     open System
+    open System.IO
     open System.Reflection
     open Plainion.IronDoc
 
@@ -115,21 +80,39 @@ module ReflectionApi =
     }
 
     let assemblyLoader =
+        let baseDirs = ref([ AppDomain.CurrentDomain.BaseDirectory ])
+
+        let onAssemblyResolve = System.ResolveEventHandler( fun _ e ->
+            let assembly = AppDomain.CurrentDomain.GetAssemblies ()
+                            |> Array.tryFind( fun asm -> String.Equals(asm.FullName, e.Name, StringComparison.OrdinalIgnoreCase) )
+
+            match assembly with
+            | Some x -> x
+            | None -> null )
+
+        let onReflectionOnlyAssemblyResolve (e:ResolveEventArgs) = 
+            new AssemblyName( e.Name ) |> tryReflectionOnlyLoadByName !baseDirs
+
+        AppDomain.CurrentDomain.add_AssemblyResolve onAssemblyResolve
+        AppDomain.CurrentDomain.add_ReflectionOnlyAssemblyResolve (ResolveEventHandler( fun _ e -> onReflectionOnlyAssemblyResolve e))
+        
         let agent = ResilientMailbox<LoadAssemblyMsg>.Start(fun inbox ->
-            let rec loop baseDirs =
+            let rec loop () =
                 async {
                     let! msg = inbox.Receive()
 
                     match msg with
                     | LoadAssembly (file, replyChannel) -> 
-                        let newBaseDirs, assembly = file |> loadAssembly baseDirs
-                    
+                        let newBaseDirs, assembly = file |> loadAssembly !baseDirs
+                        
+                        baseDirs := newBaseDirs
+
                         replyChannel.Reply assembly
 
-                        return! loop newBaseDirs
+                        return! loop ()
                     | Stop -> return ()
                 }
-            loop [ AppDomain.CurrentDomain.BaseDirectory ] ) 
+            loop () ) 
         agent.Error.Add(handleLastChanceException)
         { Load = fun assembly -> agent.PostAndReply( fun replyChannel -> LoadAssembly( assembly, replyChannel ) )
           Stop = fun () -> agent.Post Stop }

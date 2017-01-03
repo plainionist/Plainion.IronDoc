@@ -6,8 +6,8 @@ open System.Reflection
 [<assembly: AssemblyProductAttribute("Plainion.IronDoc")>]
 [<assembly: AssemblyDescriptionAttribute("Plainion.IronDoc")>]
 [<assembly: AssemblyCopyrightAttribute("Copyright @ 2017")>]
-[<assembly: AssemblyVersionAttribute("2.2.0")>]
-[<assembly: AssemblyFileVersionAttribute("2.2.0")>]
+[<assembly: AssemblyVersionAttribute("2.3.0")>]
+[<assembly: AssemblyFileVersionAttribute("2.3.0")>]
 do ()
 
 module internal AssemblyVersionInformation =
@@ -15,5 +15,5 @@ module internal AssemblyVersionInformation =
     let [<Literal>] AssemblyProduct = "Plainion.IronDoc"
     let [<Literal>] AssemblyDescription = "Plainion.IronDoc"
     let [<Literal>] AssemblyCopyright = "Copyright @ 2017"
-    let [<Literal>] AssemblyVersion = "2.2.0"
-    let [<Literal>] AssemblyFileVersion = "2.2.0"
+    let [<Literal>] AssemblyVersion = "2.3.0"
+    let [<Literal>] AssemblyFileVersion = "2.3.0"

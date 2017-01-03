@@ -14,14 +14,6 @@ let inline implicit arg =
 
 let (!!) : string -> XName = implicit
 
-/// simplify creation of guards
-type internal Guard( on, off ) =
-    do on()
-
-    interface IDisposable with
-        member x.Dispose() = 
-            off()
-
 let (|InvariantEqual|_|) (str:string) arg = 
   if String.Compare(str, arg, StringComparison.OrdinalIgnoreCase) = 0 then Some() else None
 
