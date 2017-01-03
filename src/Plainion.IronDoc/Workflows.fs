@@ -19,6 +19,8 @@ type Tree =
 /// Summary page per namespace listing all types
 /// (with readme.md from source folder at top if available)    
 let generateAssemblyDoc outputFolder (assembly:DAssembly) (sourceFolder:string option) = 
+    let assemblyFolder = Path.Combine(outputFolder, assembly.name)
+
     let namespaceTypesMap =
         assembly.assembly.GetTypes()
         |> Seq.filter (fun t -> t.IsPublic)
@@ -43,10 +45,7 @@ let generateAssemblyDoc outputFolder (assembly:DAssembly) (sourceFolder:string o
         let fullPath = [ yield! path; yield name ]
 
         let subFolder = Path.Combine(fullPath |> Array.ofList)
-        let folder = Path.Combine(outputFolder, subFolder)
-
-        if Directory.Exists folder then 
-            Directory.Delete(folder, true)
+        let folder = Path.Combine(assemblyFolder, subFolder)
 
         Directory.CreateDirectory(folder) |> ignore
 
@@ -98,6 +97,9 @@ let generateAssemblyDoc outputFolder (assembly:DAssembly) (sourceFolder:string o
         |> Seq.iter(fun child -> 
             let (Tree(name, children)) = child
             renderTree fullPath child)
+
+    if Directory.Exists assemblyFolder then 
+        Directory.Delete(assemblyFolder, true)
 
     namespaceTypesMap
     |> Seq.map(fun x -> x.Key.Split( [|'.'|], StringSplitOptions.RemoveEmptyEntries) |> List.ofArray)

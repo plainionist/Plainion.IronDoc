@@ -3,6 +3,7 @@
 
 - loading reference assemblies fixed
 - rendering empty namespaces fixed
+- fixed building multiple assemblies into same output folder
 
 ## 2.1.0 - 2017-01-02
 
