@@ -1,4 +1,9 @@
 
+## 2.2.0 - 2017-01-03
+
+- loading reference assemblies fixed
+- 
+
 ## 2.1.0 - 2017-01-02
 
 - IronDoc.exe now released on GitHub 
