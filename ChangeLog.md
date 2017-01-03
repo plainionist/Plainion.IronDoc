@@ -2,7 +2,7 @@
 ## 2.2.0 - 2017-01-03
 
 - loading reference assemblies fixed
-- 
+- rendering empty namespaces fixed
 
 ## 2.1.0 - 2017-01-02
 

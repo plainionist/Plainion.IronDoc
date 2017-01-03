@@ -13,7 +13,6 @@ module private ReflectionImpl =
     /// Load assembly from byte[] to avoid getting the file locked by our process
     /// </summary>
     let reflectionOnlyLoad assemblyFile =
-        printfn "%s" assemblyFile
         let assemblyBytes = File.ReadAllBytes assemblyFile
         { DAssembly.name = Path.GetFileNameWithoutExtension(assemblyFile)
           location = Path.GetFullPath(assemblyFile)

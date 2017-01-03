@@ -24,7 +24,7 @@ let generateAssemblyDoc outputFolder (assembly:DAssembly) (sourceFolder:string o
         |> Seq.filter (fun t -> t.IsPublic)
         |> Seq.map (createDType assembly)
         |> Seq.groupBy(fun x -> x.nameSpace )
-        |> dict
+        |> Map.ofSeq
     
     let rec createTrees (namespaces:list<list<string>>) = [
         for top in namespaces |> Seq.groupBy(fun x -> Seq.head x) do
@@ -49,48 +49,55 @@ let generateAssemblyDoc outputFolder (assembly:DAssembly) (sourceFolder:string o
             Directory.Delete(folder, true)
 
         Directory.CreateDirectory(folder) |> ignore
-        System.Diagnostics.Debugger.Launch() |> ignore
+
         let fullName = String.Join(".", fullPath)
-        let types = namespaceTypesMap.[fullName]
+        let types = namespaceTypesMap |> Map.tryFind(fullName)
 
-        // render individual type files
-        types
-        |> Seq.iter(fun x ->
-            use writer = new StreamWriter(Path.Combine(folder, (x.name |> tryRemoveAfter '`') + ".md"))
-            renderType writer x )   
-
-        // render summary file
-        use writer =  new StreamWriter(Path.Combine(folder, "ReadMe.md")) 
-
-        renderHeadline writer 1 fullName
-        writer.WriteLine()
-
-        match sourceFolder with
+        match types with
         | None -> ()
-        | Some src ->   // take full path without the first element as this is usually the root of the
-                        // source folder and not represented as separate folder 
-                        let readMe = Path.Combine(src, Path.Combine(fullPath |> Seq.skip 1 |> Array.ofSeq), "ReadMe.md")
-                        if File.Exists readMe then
-                            File.ReadAllText(readMe).Trim().Split([|Environment.NewLine|], StringSplitOptions.None)
-                            |> Seq.map(fun line -> if line.StartsWith("#", StringComparison.InvariantCulture) then "#" + line else line )
-                            |> Seq.iter writer.WriteLine
+        | Some types' ->
+            // render individual type files
+            types'
+            |> Seq.iter(fun x ->
+                use writer = new StreamWriter(Path.Combine(folder, (x.name |> tryRemoveAfter '`') + ".md"))
+                renderType writer x )   
 
-        renderHeadline writer 2 "Types"
-        writer.WriteLine()
+            // render summary file
+            use writer =  new StreamWriter(Path.Combine(folder, "ReadMe.md")) 
 
-        types
-        |> Seq.iter(fun x -> let normalizedName = x.name |> tryRemoveAfter '`'
-                             writer.WriteLine( sprintf "* [%s](%s)" normalizedName (normalizedName + ".md") ) )
-
-        if children.IsEmpty |> not then
-            renderHeadline writer 2 "Namespaces"
+            renderHeadline writer 1 fullName
             writer.WriteLine()
 
-            children
-            |> Seq.iter(fun child -> 
-                let (Tree(name, children)) = child
-                writer.WriteLine( sprintf "* [%s.%s](%s/ReadMe.md)" fullName name name )
-                renderTree fullPath child)
+            match sourceFolder with
+            | None -> ()
+            | Some src ->   // take full path without the first element as this is usually the root of the
+                            // source folder and not represented as separate folder 
+                            let readMe = Path.Combine(src, Path.Combine(fullPath |> Seq.skip 1 |> Array.ofSeq), "ReadMe.md")
+                            if File.Exists readMe then
+                                File.ReadAllText(readMe).Trim().Split([|Environment.NewLine|], StringSplitOptions.None)
+                                |> Seq.map(fun line -> if line.StartsWith("#", StringComparison.InvariantCulture) then "#" + line else line )
+                                |> Seq.iter writer.WriteLine
+
+            renderHeadline writer 2 "Types"
+            writer.WriteLine()
+
+            types'
+            |> Seq.iter(fun x -> let normalizedName = x.name |> tryRemoveAfter '`'
+                                 writer.WriteLine( sprintf "* [%s](%s)" normalizedName (normalizedName + ".md") ) )
+
+            if children.IsEmpty |> not then
+                renderHeadline writer 2 "Namespaces"
+                writer.WriteLine()
+
+                children
+                |> Seq.iter(fun child -> 
+                    let (Tree(name, children)) = child
+                    writer.WriteLine( sprintf "* [%s.%s](%s/ReadMe.md)" fullName name name ))
+
+        children
+        |> Seq.iter(fun child -> 
+            let (Tree(name, children)) = child
+            renderTree fullPath child)
 
     namespaceTypesMap
     |> Seq.map(fun x -> x.Key.Split( [|'.'|], StringSplitOptions.RemoveEmptyEntries) |> List.ofArray)
