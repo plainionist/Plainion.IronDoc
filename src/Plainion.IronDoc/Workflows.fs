@@ -49,7 +49,7 @@ let generateAssemblyDoc outputFolder (assembly:DAssembly) (sourceFolder:string o
             Directory.Delete(folder, true)
 
         Directory.CreateDirectory(folder) |> ignore
-
+        System.Diagnostics.Debugger.Launch() |> ignore
         let fullName = String.Join(".", fullPath)
         let types = namespaceTypesMap.[fullName]
 
