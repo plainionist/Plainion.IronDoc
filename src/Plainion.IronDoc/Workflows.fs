@@ -6,6 +6,7 @@ open System.IO
 open Plainion.IronDoc.Parsing
 open Plainion.IronDoc.Rendering
 open System
+open System.Diagnostics
 
 let generateTypeDoc writer t = 
     renderType writer t
@@ -44,17 +45,21 @@ let generateAssemblyDoc outputFolder (assembly:DAssembly) (sourceFolder:string o
 
         let fullPath = [ yield! path; yield name ]
 
-        let subFolder = Path.Combine(fullPath |> Array.ofList)
-        let folder = Path.Combine(assemblyFolder, subFolder)
-
-        Directory.CreateDirectory(folder) |> ignore
-
         let fullName = String.Join(".", fullPath)
-        let types = namespaceTypesMap |> Map.tryFind(fullName)
+        let types = 
+            namespaceTypesMap 
+            |> Map.tryFind(fullName)
+            |> Option.map List.ofSeq
+            |> Option.bind(function | x when x.Length = 0 -> None | x -> Some x )
 
         match types with
         | None -> ()
         | Some types' ->
+            let subFolder = Path.Combine(fullPath |> Array.ofList)
+            let folder = Path.Combine(assemblyFolder, subFolder)
+
+            Directory.CreateDirectory(folder) |> ignore
+
             // render individual type files
             types'
             |> Seq.iter(fun x ->
@@ -91,7 +96,7 @@ let generateAssemblyDoc outputFolder (assembly:DAssembly) (sourceFolder:string o
                 children
                 |> Seq.iter(fun child -> 
                     let (Tree(name, children)) = child
-                    writer.WriteLine( sprintf "* [%s.%s](%s/ReadMe.md)" fullName name name ))
+                    writer.WriteLine( sprintf "* [%s.%s](%s/ReadMe.md)" fullName name name ) )
 
         children
         |> Seq.iter(fun child -> 
