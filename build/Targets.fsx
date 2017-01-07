@@ -24,13 +24,17 @@ Target "CreatePackage" (fun _ ->
     |> PNuGet.Pack (projectRoot </> "build" </> "Plainion.IronDoc.AfterBuild.nuspec") (projectRoot </> "pkg")
 )
 
-Target "DeployPackage" (fun _ ->
+Target "Deploy" (fun _ ->
     let releaseDir = @"\bin\Plainion.IronDoc"
 
     CleanDir releaseDir
 
     let zip = PZip.GetReleaseFile()
     Unzip releaseDir zip
+)
+
+Target "Publish" (fun _ ->
+    let zip = PZip.GetReleaseFile()
 
     PGitHub.Release [ zip ]
 
