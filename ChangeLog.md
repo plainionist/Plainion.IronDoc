@@ -1,3 +1,7 @@
+## 2.4.0 - 2017-08-23
+
+- updated to .net fw 4.6.1
+
 ## 2.3.0 - 2017-01-03
 
 - loading assemblies fixed
