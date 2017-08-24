@@ -1,6 +1,7 @@
 ## 2.5.0 - unreleased
 
 - error handling improved
+- fixed loading linked assemblies with reflection only
 
 ## 2.4.0 - 2017-08-23
 

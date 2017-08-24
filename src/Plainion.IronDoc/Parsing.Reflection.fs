@@ -47,13 +47,17 @@ module private ReflectionImpl =
                 else
                     tryLoadFromGAC()
 
-        let loadedAssembly = 
-            AppDomain.CurrentDomain.ReflectionOnlyGetAssemblies ()
-            |> Array.tryFind( fun asm -> String.Equals(asm.FullName, assemblyName.FullName, StringComparison.OrdinalIgnoreCase) )
+        let tryFindLoadedAssembly (assemblies:Assembly seq) =
+            assemblies |> Seq.tryFind( fun asm -> String.Equals(asm.FullName, assemblyName.FullName, StringComparison.OrdinalIgnoreCase) )
 
-        match loadedAssembly with
-        | Some x -> x
-        | None -> assemblyName |> reflectionOnlyLoadByName baseDirs 
+        match AppDomain.CurrentDomain.GetAssemblies() |> tryFindLoadedAssembly with
+        | Some x -> // dont try to load the given assembly because we cannot load the same assembly twice from different locations
+                    // instead just load the already "linked" assembly (e.g. Fsharp.Core) with reflection only again
+                    Assembly.ReflectionOnlyLoad(x.FullName)
+        | None ->
+            match AppDomain.CurrentDomain.ReflectionOnlyGetAssemblies() |> tryFindLoadedAssembly with
+            | Some x -> x
+            | None -> assemblyName |> reflectionOnlyLoadByName baseDirs 
     
     let loadAssembly baseDirs file = 
         let newBaseDirs = 
@@ -123,7 +127,9 @@ module ReflectionApi =
                     | Stop -> return ()
                 }
             loop () ) 
+
         agent.Error.Add(handleLastChanceException)
+
         { Load = fun assembly -> agent.PostAndReply( fun replyChannel -> LoadAssembly( assembly, replyChannel ) )
           Stop = fun () -> agent.Post Stop }
 

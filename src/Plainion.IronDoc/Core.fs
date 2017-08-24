@@ -67,6 +67,6 @@ type ResilientMailbox<'T> private(f:ResilientMailbox<'T> -> Async<unit>) as self
         mbox
 
 let handleLastChanceException (ex:Exception) = 
-    Console.Error.WriteLine( ExceptionExtensions.Dump(ex) )
+    Console.Error.WriteLine( "FATAL ERROR: " + ExceptionExtensions.Dump(ex) )
 
     Environment.Exit(1)
