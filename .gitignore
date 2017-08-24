@@ -3,11 +3,10 @@
 **/obj/**
 /*.suo
 /pkg/**
-/packages/NUnit.3.2.1
-/packages/NUnit.3.4.1
+/packages/NUnit.*
+/packages/Plainion.*
 /TestResult.xml
 /Plainion.IronDoc.sln.DotSettings.user
-/Plainion.IronDoc.gc.ssmosett
-/packages/NuDoq.1.2.5
-/Plainion.IronDoc.gc.Seb
+/Plainion.IronDoc.gc.*
+/packages/NuDoq.*
 /build/.fake

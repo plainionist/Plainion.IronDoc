@@ -53,10 +53,14 @@
     <Compile Include="Program.fs" />
     <None Include="App.config" />
     <None Include="ReadMe.md" />
+    <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.Build.Framework" />
     <Reference Include="Microsoft.Build.Utilities.v4.0" />
+    <Reference Include="Plainion.Core">
+      <HintPath>..\..\packages\Plainion.Core.3.3.0\lib\NET45\Plainion.Core.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />

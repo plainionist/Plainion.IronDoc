@@ -4,6 +4,7 @@ open System
 open Microsoft.Build.Framework
 open Microsoft.Build.Utilities
 open Plainion.IronDoc
+open Plainion
 
 /// <summary>
 /// MsBuild task to generate API documentation
@@ -30,6 +31,5 @@ type IronDoc() =
 
             true
         with
-        | ex ->
-            this.Log.LogError( ex.ToString() )
-            false
+        | ex -> this.Log.LogError( ExceptionExtensions.Dump(ex) )
+                false

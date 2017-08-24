@@ -18,7 +18,7 @@ module private ReflectionImpl =
           location = Path.GetFullPath(assemblyFile)
           assembly = Assembly.ReflectionOnlyLoad assemblyBytes }
 
-    let getAssemblyLocation ( assemblyName : AssemblyName ) baseDirs =
+    let getAssemblyLocation (assemblyName:AssemblyName) baseDirs =
         let assemblyExtensions = [ ".dll"; ".exe" ]
 
         baseDirs
@@ -55,12 +55,13 @@ module private ReflectionImpl =
         | Some x -> x
         | None -> assemblyName |> reflectionOnlyLoadByName baseDirs 
     
-    let loadAssembly baseDirs assembly = 
-        let newBaseDirs = Path.GetDirectoryName(assembly) :: baseDirs
-                            |> Seq.distinct
-                            |> List.ofSeq
+    let loadAssembly baseDirs file = 
+        let newBaseDirs = 
+            Path.GetDirectoryName(file)::baseDirs
+            |> Seq.distinct
+            |> List.ofSeq
 
-        newBaseDirs, reflectionOnlyLoad assembly
+        newBaseDirs, reflectionOnlyLoad file
         
     type LoadAssemblyMsg = 
         | LoadAssembly of string * replyChannel : AsyncReplyChannel<DAssembly>
@@ -91,7 +92,13 @@ module ReflectionApi =
             | None -> null )
 
         let onReflectionOnlyAssemblyResolve (e:ResolveEventArgs) = 
-            new AssemblyName( e.Name ) |> tryReflectionOnlyLoadByName !baseDirs
+            let assembly = new AssemblyName( e.Name ) |> tryReflectionOnlyLoadByName !baseDirs
+
+            if assembly <> null then
+                // get all types to ensure that all relevant assemblies are loaded
+                assembly.GetTypes() |> ignore
+
+            assembly 
 
         AppDomain.CurrentDomain.add_AssemblyResolve onAssemblyResolve
         AppDomain.CurrentDomain.add_ReflectionOnlyAssemblyResolve (ResolveEventHandler( fun _ e -> onReflectionOnlyAssemblyResolve e))
@@ -106,6 +113,9 @@ module ReflectionApi =
                         let newBaseDirs, assembly = file |> loadAssembly !baseDirs
                         
                         baseDirs := newBaseDirs
+
+                        // get all types to ensure that all relevant assemblies are loaded
+                        assembly.assembly.GetTypes() |> ignore
 
                         replyChannel.Reply assembly
 

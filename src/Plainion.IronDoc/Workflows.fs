@@ -7,6 +7,7 @@ open Plainion.IronDoc.Parsing
 open Plainion.IronDoc.Rendering
 open System
 open System.Diagnostics
+open Plainion
 
 let generateTypeDoc writer t = 
     renderType writer t
@@ -116,4 +117,4 @@ let generateAssemblyDoc outputFolder (assembly:DAssembly) (sourceFolder:string o
     
 let generateAssemblyFileDoc outputFolder assemblyFile  = 
     generateAssemblyDoc outputFolder (assemblyLoader.Load assemblyFile)
-
+        

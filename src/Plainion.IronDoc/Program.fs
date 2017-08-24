@@ -3,6 +3,8 @@ module Plainion.IronDoc.Program
 
 open System.IO
 open Plainion.IronDoc
+open Plainion
+open System
 
 let usage() =
     printfn "Plainion.IronDoc [Options]"
@@ -83,6 +85,9 @@ let main argv =
     | Some x ->
         printfn "Generating documentation to: %s" x.output
 
-        Workflows.generateAssemblyFileDoc x.output x.assembly x.sources
-
-        0
+        try
+            Workflows.generateAssemblyFileDoc x.output x.assembly x.sources
+            0
+        with
+        | ex -> Console.Error.WriteLine( ExceptionExtensions.Dump(ex) )
+                1

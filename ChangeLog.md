@@ -1,3 +1,7 @@
+## 2.5.0 - unreleased
+
+- error handling improved
+
 ## 2.4.0 - 2017-08-23
 
 - updated to .net fw 4.6.1

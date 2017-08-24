@@ -6,6 +6,7 @@ open System
 open System.Text.RegularExpressions
 open System.Xml.Linq
 open System.Reflection
+open Plainion
 
 /// Call "Implicit" operator
 /// see: http://codebetter.com/matthewpodwysocki/2009/06/11/f-duck-typing-and-structural-typing/
@@ -66,9 +67,6 @@ type ResilientMailbox<'T> private(f:ResilientMailbox<'T> -> Async<unit>) as self
         mbox
 
 let handleLastChanceException (ex:Exception) = 
-    match ex with
-    | :? ReflectionTypeLoadException as e -> printfn "Exception: %A" ex
-                                             e.LoaderExceptions |> Seq.iter (printfn " ==> LoaderException: %A")
-    | _ -> printf "Exception: %A" ex
+    Console.Error.WriteLine( ExceptionExtensions.Dump(ex) )
 
     Environment.Exit(1)
