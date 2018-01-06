@@ -5,5 +5,17 @@
     <Node Id="fa96576b-cb5e-466a-ab07-acd1f3c22a03">
       <Caption><![CDATA[copy also "Readme.md" from the projects and folders to "doc" location]]></Caption>
     </Node>
+    <Node Id="758a0f44-53df-4d09-a96f-311618a341ff">
+      <Caption><![CDATA[generate specs from bdd-lite]]></Caption>
+    </Node>
+    <Node Id="91c31d3a-547e-45d7-b399-9ae8e0510b7c">
+      <Caption><![CDATA[BDD-lite]]></Caption>
+      <Node Id="b617bc6a-c634-4df5-a71f-b80aee10f384">
+        <Caption><![CDATA[document the approach]]></Caption>
+      </Node>
+      <Node Id="c8bd4e8a-6d37-4f21-b5e8-08414f89a830">
+        <Caption><![CDATA[details]]></Caption>
+      </Node>
+    </Node>
   </Node>
 </Tree>

@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Node Id="b617bc6a-c634-4df5-a71f-b80aee10f384" Created="636508677694039127" LastModified="636508678337705943">
+  <Caption><![CDATA[document the approach]]></Caption>
+  <Content><![CDATA[- including fsunit and f# benefits
+- how to do it in c#
+- do it on web site
+]]></Content>
+</Node>

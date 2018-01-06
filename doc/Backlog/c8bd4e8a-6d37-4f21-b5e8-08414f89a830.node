@@ -1,0 +1,10 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Node Id="c8bd4e8a-6d37-4f21-b5e8-08414f89a830" Created="636508678369247747" LastModified="636508679033485739">
+  <Caption><![CDATA[details]]></Caption>
+  <Content><![CDATA[- how to specify the scenario?
+- how to specify the feature? attributes?
+- do i need scenarios? 
+- what is the mission of bdd-lite -> pragmatic
+- if that does not fit the project use another framework
+- feature description may make still sense to keep relationship to value]]></Content>
+</Node>
